@@ -1,13 +1,4 @@
-// useAuth — Custom hook to access auth state
-// Phase 2: Returns { user, loading, isAdmin }
+// src/hooks/useAuth.js
+// Re-export useAuth from AuthContext for cleaner imports in components
 
-import { useContext } from 'react'
-import { AuthContext } from '../context/AuthContext'
-
-export function useAuth() {
-  const context = useContext(AuthContext)
-  if (!context) {
-    throw new Error('useAuth must be used within an AuthProvider')
-  }
-  return context
-}
+export { useAuth } from '../context/AuthContext'

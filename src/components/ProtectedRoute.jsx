@@ -1,6 +1,17 @@
-// ProtectedRoute — Redirects unauthenticated users to /login
-// Phase 2: Wraps all authenticated routes
+// src/components/ProtectedRoute.jsx
+// Redirects unauthenticated users to /login
+// Redirects authenticated but not onboarded users to /onboarding
+
+import { Navigate } from 'react-router-dom'
+import { useAuth } from '../hooks/useAuth'
+import LoadingSpinner from './LoadingSpinner'
 
 export default function ProtectedRoute({ children }) {
-  return children // Placeholder — implemented in Phase 2
+  const { user, loading, isOnboarded } = useAuth()
+
+  if (loading) return <LoadingSpinner />
+  if (!user) return <Navigate to="/login" replace />
+  if (!isOnboarded) return <Navigate to="/onboarding" replace />
+
+  return children
 }
