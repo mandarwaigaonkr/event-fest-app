@@ -22,21 +22,27 @@ import CreateEvent from './pages/admin/CreateEvent'
 import EditEvent from './pages/admin/EditEvent'
 import EventParticipants from './pages/admin/EventParticipants'
 
+import { ThemeProvider } from './context/ThemeContext'
+
 export default function App() {
   return (
-    <BrowserRouter>
-      <AuthProvider>
-        {/* Global toast notifications */}
-        <Toaster
-          position="bottom-center"
-          toastOptions={{
-            duration: 3000,
-            style: {
-              borderRadius: '10px',
-              fontSize: '14px',
-            },
-          }}
-        />
+    <ThemeProvider>
+      <BrowserRouter>
+        <AuthProvider>
+          {/* Global toast notifications */}
+          <Toaster
+            position="bottom-center"
+            toastOptions={{
+              duration: 3000,
+              style: {
+                borderRadius: '10px',
+                fontSize: '14px',
+                background: 'var(--color-bg-card)',
+                color: 'var(--color-text-primary)',
+                border: '1px solid var(--color-bg-border)',
+              },
+            }}
+          />
 
         <Routes>
           {/* Public routes */}
@@ -73,5 +79,6 @@ export default function App() {
         </Routes>
       </AuthProvider>
     </BrowserRouter>
+    </ThemeProvider>
   )
 }

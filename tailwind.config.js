@@ -4,47 +4,44 @@ export default {
     "./index.html",
     "./src/**/*.{js,ts,jsx,tsx}",
   ],
+  darkMode: 'class',
   theme: {
     extend: {
       colors: {
-        // OLED Dark theme
         bg: {
-          base: '#000000',
-          card: '#0d0d0d',
-          elevated: '#141414',
-          border: '#1e1e1e',
+          base: 'var(--color-bg-base)',
+          card: 'var(--color-bg-card)',
+          elevated: 'var(--color-bg-elevated)',
+          border: 'var(--color-bg-border)',
         },
-        // Accent — Electric Indigo
         accent: {
-          DEFAULT: '#6366f1',
-          light: '#818cf8',
-          dim: 'rgba(99,102,241,0.15)',
-          glow: 'rgba(99,102,241,0.35)',
+          DEFAULT: 'var(--color-accent)',
+          light: 'var(--color-accent-light)',
+          dim: 'var(--color-accent-dim)',
+          glow: 'var(--color-accent-glow)',
         },
-        // Text
         text: {
-          primary: '#f1f5f9',
-          secondary: '#94a3b8',
-          muted: '#475569',
+          primary: 'var(--color-text-primary)',
+          secondary: 'var(--color-text-secondary)',
+          muted: 'var(--color-text-muted)',
         },
-        // Status
-        success: '#10b981',
-        warning: '#f59e0b',
-        danger: '#ef4444',
-        // Keep for compatibility
+        success: 'var(--color-success)',
+        warning: 'var(--color-warning)',
+        danger: 'var(--color-danger)',
+        // Compatibility fallbacks
         primary: {
-          DEFAULT: '#6366f1',
-          light: 'rgba(99,102,241,0.15)',
+          DEFAULT: 'var(--color-accent)',
+          light: 'var(--color-accent-dim)',
         },
-        neutral: '#94a3b8',
-        background: '#000000',
+        neutral: 'var(--color-text-muted)',
+        background: 'var(--color-bg-base)',
       },
       fontFamily: {
         sans: ['Inter', 'system-ui', 'sans-serif'],
       },
       boxShadow: {
-        'glow': '0 0 20px rgba(99,102,241,0.25)',
-        'glow-sm': '0 0 10px rgba(99,102,241,0.2)',
+        'glow': '0 0 20px var(--color-accent-glow)',
+        'glow-sm': '0 0 10px var(--color-accent-dim)',
       },
     },
   },

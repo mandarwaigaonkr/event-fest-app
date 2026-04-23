@@ -7,12 +7,15 @@ import { signInWithPopup } from 'firebase/auth'
 import { doc, getDoc, setDoc, serverTimestamp } from 'firebase/firestore'
 import { auth, db, googleProvider } from '../../firebase'
 import { useAuth } from '../../hooks/useAuth'
+import { useTheme } from '../../context/ThemeContext'
+import { SunIcon, MoonIcon } from '@heroicons/react/24/outline'
 
 export default function Login() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const navigate = useNavigate()
   const { user } = useAuth()
+  const { isDark, toggleTheme } = useTheme()
 
   if (user) {
     navigate('/dashboard', { replace: true })
@@ -56,7 +59,20 @@ export default function Login() {
   }
 
   return (
-    <div className="min-h-screen bg-bg-base flex flex-col items-center justify-center px-4">
+    <div className="min-h-screen bg-bg-base flex flex-col items-center justify-center px-4 relative transition-colors duration-300">
+      
+      {/* Theme Toggle Button */}
+      <button 
+        onClick={toggleTheme}
+        className="absolute top-6 right-6 p-2 rounded-full bg-bg-elevated border border-bg-border text-text-secondary hover:text-accent hover:border-accent/50 transition-all shadow-sm"
+        aria-label="Toggle theme"
+      >
+        {isDark ? (
+          <SunIcon className="w-5 h-5" />
+        ) : (
+          <MoonIcon className="w-5 h-5" />
+        )}
+      </button>
 
       {/* Ambient glow */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
