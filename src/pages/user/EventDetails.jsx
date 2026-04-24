@@ -34,6 +34,7 @@ export default function EventDetails() {
   const [event, setEvent] = useState(null)
   const [loading, setLoading] = useState(true)
   const [isRegistered, setIsRegistered] = useState(false)
+  const [isWaitlisted, setIsWaitlisted] = useState(false)
   const [registering, setRegistering] = useState(false)
   const [modalState, setModalState] = useState(null) // 'register' | 'unregister' | null
 
@@ -59,7 +60,18 @@ export default function EventDetails() {
     async function checkReg() {
       const regRef = doc(db, 'events', eventId, 'registrations', user.uid)
       const snap = await getDoc(regRef)
-      setIsRegistered(snap.exists() && !snap.data().banned)
+      if (snap.exists() && !snap.data().banned) {
+        if (snap.data().status === 'waitlisted') {
+          setIsRegistered(false)
+          setIsWaitlisted(true)
+        } else {
+          setIsRegistered(true)
+          setIsWaitlisted(false)
+        }
+      } else {
+        setIsRegistered(false)
+        setIsWaitlisted(false)
+      }
     }
     checkReg()
   }, [eventId, user, event?.registeredCount])
@@ -93,10 +105,17 @@ export default function EventDetails() {
     
     if (modalState === 'register') {
       const success = await registerForEvent(eventId, profile)
-      if (success) setIsRegistered(true)
+      if (success) {
+        // Will check waitlist condition in the next effect run, but optimistic:
+        if (isFull) setIsWaitlisted(true)
+        else setIsRegistered(true)
+      }
     } else if (modalState === 'unregister') {
       const success = await unregisterFromEvent(eventId, profile.uid)
-      if (success) setIsRegistered(false)
+      if (success) {
+        setIsRegistered(false)
+        setIsWaitlisted(false)
+      }
     }
     
     setRegistering(false)
@@ -194,16 +213,17 @@ export default function EventDetails() {
           {/* Register / Unregister Button */}
           <button
             onClick={() => {
-              if (isRegistered) setModalState('unregister')
-              else if (!isFull) setModalState('register')
+              if (isRegistered || isWaitlisted) {
+                setModalState('unregister')
+              } else {
+                setModalState('register')
+              }
             }}
-            disabled={(!isRegistered && isFull) || registering}
+            disabled={registering}
             className={`w-full h-12 rounded-xl text-sm font-semibold transition-all duration-200 flex items-center justify-center gap-2 group/btn
-              ${isRegistered
-                ? 'bg-green-500/10 text-green-500 border border-green-500/20 hover:bg-red-500/10 hover:text-danger hover:border-danger/20'
-                : isFull
-                  ? 'bg-bg-elevated text-text-muted border border-bg-border cursor-not-allowed'
-                  : 'bg-accent text-white hover:bg-accent-light shadow-glow-sm hover:shadow-glow'
+              ${(isRegistered || isWaitlisted)
+                ? 'bg-bg-elevated text-text-primary border border-bg-border hover:bg-red-500/10 hover:text-danger hover:border-danger/20'
+                : 'bg-accent text-white hover:bg-accent-light shadow-glow-sm hover:shadow-glow'
               }`}
           >
             {registering ? (
@@ -213,13 +233,17 @@ export default function EventDetails() {
               </>
             ) : isRegistered ? (
               <span className="group-hover/btn:hidden">✓ Already Registered</span>
+            ) : isWaitlisted ? (
+              <span className="group-hover/btn:hidden">⏳ Waitlisted</span>
             ) : isFull ? (
-              'Registrations Full'
+              'Join Waitlist'
             ) : (
               'Register Now'
             )}
-            {isRegistered && !registering && (
-              <span className="hidden group-hover/btn:inline">Cancel Registration</span>
+            {(isRegistered || isWaitlisted) && !registering && (
+              <span className="hidden group-hover/btn:inline">
+                {isWaitlisted ? 'Leave Waitlist' : 'Cancel Registration'}
+              </span>
             )}
           </button>
         </div>
@@ -227,13 +251,21 @@ export default function EventDetails() {
 
       <ConfirmModal
         isOpen={modalState !== null}
-        title={modalState === 'register' ? 'Confirm Registration' : 'Cancel Registration'}
+        title={
+          modalState === 'register'
+            ? (isFull ? 'Join Waitlist' : 'Confirm Registration')
+            : (isWaitlisted ? 'Leave Waitlist' : 'Cancel Registration')
+        }
         message={
           modalState === 'register'
-            ? `Are you sure you want to register for ${event.name}?`
-            : `Are you sure you want to remove your registration for ${event.name}? This will free up your spot.`
+            ? (isFull ? `The event is full. Would you like to join the waitlist for ${event.name}? If a spot opens up, you will be automatically registered.` : `Are you sure you want to register for ${event.name}?`)
+            : (isWaitlisted ? `Are you sure you want to leave the waitlist for ${event.name}?` : `Are you sure you want to remove your registration for ${event.name}? This will free up your spot.`)
         }
-        confirmText={modalState === 'register' ? 'Yes, Register' : 'Yes, Cancel it'}
+        confirmText={
+          modalState === 'register'
+            ? (isFull ? 'Yes, Join Waitlist' : 'Yes, Register')
+            : 'Yes, Cancel it'
+        }
         isDestructive={modalState === 'unregister'}
         onConfirm={handleConfirm}
         onCancel={() => setModalState(null)}

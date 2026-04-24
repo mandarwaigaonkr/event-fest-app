@@ -143,10 +143,16 @@ export default function MyEvents() {
                     </div>
                   </div>
 
-                  {/* Registered badge */}
-                  <span className="px-2 py-0.5 rounded-full bg-green-500/10 text-green-500 text-[10px] font-semibold shrink-0">
-                    Registered
-                  </span>
+                  {/* Status badge */}
+                  {reg.status === 'waitlisted' ? (
+                    <span className="px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-500 text-[10px] font-semibold shrink-0">
+                      Waitlisted
+                    </span>
+                  ) : (
+                    <span className="px-2 py-0.5 rounded-full bg-green-500/10 text-green-500 text-[10px] font-semibold shrink-0">
+                      Registered
+                    </span>
+                  )}
                 </div>
               )
             })}

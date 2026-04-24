@@ -24,6 +24,7 @@ function getGradient(eventId) {
 export default function EventCard({
   event,
   isRegistered = false,
+  isWaitlisted = false,
   onRegister,
   onUnregister,
   registering = false,
@@ -68,12 +69,17 @@ export default function EventCard({
             ✓ Registered
           </span>
         )}
-        {isFull && !isRegistered && (
+        {isWaitlisted && (
+          <span className="absolute top-3 right-3 px-2.5 py-1 rounded-full bg-amber-500/90 backdrop-blur-sm text-white text-xs font-semibold shadow-md">
+            ⏳ Waitlisted
+          </span>
+        )}
+        {isFull && !isRegistered && !isWaitlisted && (
           <span className="absolute top-3 right-3 px-2.5 py-1 rounded-full bg-red-500/90 backdrop-blur-sm text-white text-xs font-semibold shadow-md">
             Full
           </span>
         )}
-        {almostFull && !isFull && !isRegistered && (
+        {almostFull && !isFull && !isRegistered && !isWaitlisted && (
           <span className="absolute top-3 right-3 px-2.5 py-1 rounded-full bg-amber-500/90 backdrop-blur-sm text-white text-xs font-semibold shadow-md">
             {spotsLeft} spot{spotsLeft > 1 ? 's' : ''} left
           </span>
@@ -105,16 +111,17 @@ export default function EventCard({
         <button
           onClick={(e) => {
             e.stopPropagation()
-            if (isRegistered && onUnregister) setModalState('unregister')
-            else if (!isRegistered && !isFull && onRegister) setModalState('register')
+            if (isRegistered || isWaitlisted) {
+              if (onUnregister) setModalState('unregister')
+            } else {
+              if (onRegister) setModalState('register')
+            }
           }}
-          disabled={(!isRegistered && isFull) || registering}
+          disabled={registering}
           className={`w-full h-11 rounded-xl text-sm font-semibold transition-all duration-200 flex items-center justify-center gap-2
-            ${isRegistered
-              ? 'bg-green-500/10 text-green-500 border border-green-500/20 hover:bg-red-500/10 hover:text-danger hover:border-danger/20'
-              : isFull
-                ? 'bg-bg-elevated text-text-muted border border-bg-border cursor-not-allowed'
-                : 'bg-accent text-white hover:bg-accent-light shadow-glow-sm hover:shadow-glow'
+            ${(isRegistered || isWaitlisted)
+              ? 'bg-bg-elevated text-text-primary border border-bg-border hover:bg-red-500/10 hover:text-danger hover:border-danger/20'
+              : 'bg-accent text-white hover:bg-accent-light shadow-glow-sm hover:shadow-glow'
             }
             disabled:opacity-70 group/btn`}
         >
@@ -125,26 +132,38 @@ export default function EventCard({
             </>
           ) : isRegistered ? (
             <span className="group-hover/btn:hidden">✓ Registered</span>
+          ) : isWaitlisted ? (
+            <span className="group-hover/btn:hidden">⏳ Waitlisted</span>
           ) : isFull ? (
-            'Registrations Full'
+            'Join Waitlist'
           ) : (
             'Register Now'
           )}
-          {isRegistered && !registering && (
-            <span className="hidden group-hover/btn:inline">Cancel Registration</span>
+          {(isRegistered || isWaitlisted) && !registering && (
+            <span className="hidden group-hover/btn:inline">
+              {isWaitlisted ? 'Leave Waitlist' : 'Cancel Registration'}
+            </span>
           )}
         </button>
       </div>
 
       <ConfirmModal
         isOpen={modalState !== null}
-        title={modalState === 'register' ? 'Confirm Registration' : 'Cancel Registration'}
+        title={
+          modalState === 'register'
+            ? (isFull ? 'Join Waitlist' : 'Confirm Registration')
+            : (isWaitlisted ? 'Leave Waitlist' : 'Cancel Registration')
+        }
         message={
           modalState === 'register'
-            ? `Are you sure you want to register for ${event.name}?`
-            : `Are you sure you want to remove your registration for ${event.name}? This will free up your spot.`
+            ? (isFull ? `The event is full. Would you like to join the waitlist for ${event.name}? If a spot opens up, you will be automatically registered.` : `Are you sure you want to register for ${event.name}?`)
+            : (isWaitlisted ? `Are you sure you want to leave the waitlist for ${event.name}?` : `Are you sure you want to remove your registration for ${event.name}? This will free up your spot.`)
         }
-        confirmText={modalState === 'register' ? 'Yes, Register' : 'Yes, Cancel it'}
+        confirmText={
+          modalState === 'register'
+            ? (isFull ? 'Yes, Join Waitlist' : 'Yes, Register')
+            : 'Yes, Cancel it'
+        }
         isDestructive={modalState === 'unregister'}
         onConfirm={handleConfirm}
         onCancel={(e) => {

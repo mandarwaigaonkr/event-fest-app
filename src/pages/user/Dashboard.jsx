@@ -12,20 +12,34 @@ import { MagnifyingGlassIcon, SunIcon, MoonIcon } from '@heroicons/react/24/outl
 export default function Dashboard() {
   const { user, profile } = useAuth()
   const { events, loading: eventsLoading } = useEvents()
-  const { registeredEventIds, loading: regsLoading } = useUserRegistrations()
+  const { registeredEventIds, waitlistedEventIds, registrations, loading: regsLoading } = useUserRegistrations()
   const { isDark, toggleTheme } = useTheme()
   const [search, setSearch] = useState('')
+  const [activeTab, setActiveTab] = useState('upcoming') // 'upcoming' | 'attended'
   const [registeringId, setRegisteringId] = useState(null)
 
   const loading = eventsLoading || regsLoading
   const activeEvents = events.filter(e => e.status === 'active')
 
-  const filtered = search.trim()
+  const upcomingEvents = search.trim()
     ? activeEvents.filter(e =>
         e.name?.toLowerCase().includes(search.toLowerCase()) ||
         e.venue?.toLowerCase().includes(search.toLowerCase())
       )
     : activeEvents
+
+  const attendedEventsList = registrations
+    .filter(r => r.attendance === 'present')
+    .map(r => r.eventData)
+
+  const attendedEvents = search.trim()
+    ? attendedEventsList.filter(e =>
+        e.name?.toLowerCase().includes(search.toLowerCase()) ||
+        e.venue?.toLowerCase().includes(search.toLowerCase())
+      )
+    : attendedEventsList
+
+  const displayEvents = activeTab === 'upcoming' ? upcomingEvents : attendedEvents
 
   async function handleRegister(event) {
     if (!profile) return
@@ -83,7 +97,7 @@ export default function Dashboard() {
           </div>
 
           {/* Search */}
-          <div className="relative">
+          <div className="relative mb-4">
             <MagnifyingGlassIcon className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-text-muted" />
             <input
               type="text"
@@ -92,6 +106,30 @@ export default function Dashboard() {
               onChange={(e) => setSearch(e.target.value)}
               className="w-full h-10 pl-10 pr-4 rounded-xl bg-bg-elevated border border-bg-border text-sm text-text-primary placeholder-text-muted outline-none focus:border-accent transition-colors"
             />
+          </div>
+
+          {/* Tabs */}
+          <div className="flex bg-bg-elevated p-1 rounded-xl">
+            <button
+              onClick={() => setActiveTab('upcoming')}
+              className={`flex-1 py-2 text-sm font-semibold rounded-lg transition-all ${
+                activeTab === 'upcoming'
+                  ? 'bg-bg-card text-text-primary shadow-sm'
+                  : 'text-text-muted hover:text-text-primary'
+              }`}
+            >
+              Upcoming Events
+            </button>
+            <button
+              onClick={() => setActiveTab('attended')}
+              className={`flex-1 py-2 text-sm font-semibold rounded-lg transition-all ${
+                activeTab === 'attended'
+                  ? 'bg-bg-card text-text-primary shadow-sm'
+                  : 'text-text-muted hover:text-text-primary'
+              }`}
+            >
+              Attended
+            </button>
           </div>
         </div>
       </div>
@@ -112,35 +150,38 @@ export default function Dashboard() {
               </div>
             ))}
           </div>
-        ) : filtered.length === 0 ? (
+        ) : displayEvents.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-20 text-center">
             <div className="w-20 h-20 rounded-full bg-bg-elevated flex items-center justify-center mb-4">
               <span className="text-3xl">🎪</span>
             </div>
             <h2 className="text-base font-semibold text-text-primary mb-1">
-              {search ? 'No events found' : 'No upcoming events'}
+              {search ? 'No events found' : activeTab === 'upcoming' ? 'No upcoming events' : 'No attended events'}
             </h2>
             <p className="text-sm text-text-muted max-w-xs">
               {search
                 ? `Nothing matched "${search}". Try a different search.`
-                : 'Check back later for new events. Exciting things are coming soon!'}
+                : activeTab === 'upcoming'
+                ? 'Check back later for new events. Exciting things are coming soon!'
+                : "You haven't attended any events yet."}
             </p>
           </div>
         ) : (
           <div className="flex flex-col gap-4">
             <div className="flex items-center justify-between">
               <h2 className="text-sm font-semibold text-text-secondary uppercase tracking-wide">
-                Upcoming Events
+                {activeTab === 'upcoming' ? 'Upcoming Events' : 'Attended Events'}
               </h2>
               <span className="text-xs text-text-muted">
-                {filtered.length} event{filtered.length !== 1 ? 's' : ''}
+                {displayEvents.length} event{displayEvents.length !== 1 ? 's' : ''}
               </span>
             </div>
-            {filtered.map(event => (
+            {displayEvents.map(event => (
               <EventCard
                 key={event.id}
                 event={event}
                 isRegistered={registeredEventIds.has(event.id)}
+                isWaitlisted={waitlistedEventIds.has(event.id)}
                 onRegister={handleRegister}
                 onUnregister={handleUnregister}
                 registering={registeringId === event.id}

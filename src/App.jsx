@@ -26,7 +26,6 @@ import EventParticipants from './pages/admin/EventParticipants'
 import TakeAttendance from './pages/admin/TakeAttendance'
 
 import { ThemeProvider } from './context/ThemeContext'
-import RoleSwitcher from './components/RoleSwitcher'
 
 export default function App() {
   return (
@@ -47,9 +46,6 @@ export default function App() {
               },
             }}
           />
-
-          {/* Floating Dev Tool */}
-          <RoleSwitcher />
 
           <Routes>
           {/* Public routes */}

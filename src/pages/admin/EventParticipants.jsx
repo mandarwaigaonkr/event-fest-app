@@ -124,16 +124,15 @@ export default function EventParticipants() {
     setActionModal(null)
   }
 
-  // Export participants as CSV
+  // Export participants as CSV based on current filter/search
   function exportCSV() {
-    const active = participants.filter(p => !p.banned)
-    if (active.length === 0) {
+    if (filtered.length === 0) {
       toast.error('No participants to export')
       return
     }
 
     const headers = ['#', 'Name', 'Email', 'Reg Number', 'Class', 'Department', 'Attendance']
-    const rows = active.map((p, i) => [
+    const rows = filtered.map((p, i) => [
       i + 1,
       p.name || '',
       p.email || '',
@@ -148,10 +147,14 @@ export default function EventParticipants() {
     const url = URL.createObjectURL(blob)
     const a = document.createElement('a')
     a.href = url
-    a.download = `${event?.name || 'event'}_participants.csv`
+    
+    // Create a descriptive filename based on the current filter
+    const filterName = filter === 'all' ? 'All' : filter.charAt(0).toUpperCase() + filter.slice(1)
+    a.download = `${event?.name || 'Event'}_${filterName}_Participants.csv`
+    
     a.click()
     URL.revokeObjectURL(url)
-    toast.success('CSV downloaded!')
+    toast.success(`${filterName} list downloaded!`)
   }
 
   if (loading) return <LoadingSpinner />

@@ -6,6 +6,7 @@ import { useParams, useNavigate } from 'react-router-dom'
 import { doc, getDoc, collection, getDocs, writeBatch, serverTimestamp } from 'firebase/firestore'
 import { db } from '../../firebase'
 import Navbar from '../../components/Navbar'
+import ConfirmModal from '../../components/ConfirmModal'
 import LoadingSpinner from '../../components/LoadingSpinner'
 import toast from 'react-hot-toast'
 import { ArrowLeftIcon } from '@heroicons/react/24/outline'
@@ -20,6 +21,7 @@ export default function TakeAttendance() {
   const [submitting, setSubmitting] = useState(false)
   const [absentIds, setAbsentIds] = useState(new Set())
   const [search, setSearch] = useState('')
+  const [showConfirm, setShowConfirm] = useState(false)
 
   useEffect(() => {
     async function loadData() {
@@ -62,6 +64,7 @@ export default function TakeAttendance() {
 
   const handleSubmit = async () => {
     setSubmitting(true)
+    setShowConfirm(false)
     try {
       const batch = writeBatch(db)
       
@@ -184,7 +187,7 @@ export default function TakeAttendance() {
              </p>
           </div>
           <button 
-            onClick={handleSubmit} 
+            onClick={() => setShowConfirm(true)} 
             disabled={submitting} 
             className="bg-accent hover:bg-accent-light text-white px-6 py-3 rounded-xl text-sm font-bold shadow-glow-sm hover:shadow-glow transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
           >
@@ -194,11 +197,32 @@ export default function TakeAttendance() {
                 Saving...
               </>
             ) : (
-              'Submit Attendance'
+              'Review & Submit'
             )}
           </button>
         </div>
       </div>
+
+      <ConfirmModal
+        isOpen={showConfirm}
+        title="Submit Attendance"
+        message={absentIds.size === 0 ? "You are about to submit attendance with NO absentees. Everyone will be marked present." : `Are you sure you want to mark these ${absentIds.size} students as Absent?`}
+        confirmText="Yes, Submit"
+        isDestructive={absentIds.size > 0}
+        onConfirm={handleSubmit}
+        onCancel={() => setShowConfirm(false)}
+      >
+        {absentIds.size > 0 && (
+          <div className="bg-bg-elevated border border-bg-border rounded-xl overflow-hidden mt-1 max-h-48 overflow-y-auto">
+            {participants.filter(p => absentIds.has(p.id)).map((p, i) => (
+              <div key={p.id} className={`px-3 py-2 text-xs flex justify-between items-center ${i !== 0 ? 'border-t border-bg-border' : ''}`}>
+                <span className="font-semibold text-text-primary truncate mr-2">{p.name}</span>
+                <span className="text-danger font-bold shrink-0">Absent</span>
+              </div>
+            ))}
+          </div>
+        )}
+      </ConfirmModal>
 
       <Navbar />
     </div>

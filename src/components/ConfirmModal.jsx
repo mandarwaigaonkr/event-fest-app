@@ -10,7 +10,8 @@ export default function ConfirmModal({
   onConfirm, 
   onCancel, 
   confirmText, 
-  isDestructive 
+  isDestructive,
+  children
 }) {
   if (!isOpen) return null
 
@@ -22,10 +23,11 @@ export default function ConfirmModal({
 
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-      <div className="bg-bg-card border border-bg-border rounded-2xl w-full max-w-sm p-6 shadow-2xl animate-in zoom-in-95 duration-200">
-        <h3 className="text-lg font-bold text-text-primary mb-2">{title}</h3>
-        <p className="text-sm text-text-secondary mb-6">{message}</p>
-        <div className="flex gap-3">
+      <div className="bg-bg-card border border-bg-border rounded-2xl w-full max-w-sm p-6 shadow-2xl animate-in zoom-in-95 duration-200 flex flex-col max-h-[90vh]">
+        <h3 className="text-lg font-bold text-text-primary mb-2 shrink-0">{title}</h3>
+        {message && <p className="text-sm text-text-secondary mb-4 whitespace-pre-line shrink-0">{message}</p>}
+        {children && <div className="mb-6 overflow-y-auto min-h-0 pr-2">{children}</div>}
+        <div className="flex gap-3 shrink-0 mt-auto">
           <button
             onClick={onCancel}
             className="flex-1 py-2.5 rounded-xl border border-bg-border text-sm font-medium text-text-primary hover:bg-bg-elevated transition-colors"

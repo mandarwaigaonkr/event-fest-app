@@ -53,6 +53,7 @@ export function useEvents() {
 export function useUserRegistrations() {
   const { user } = useAuth()
   const [registeredEventIds, setRegisteredEventIds] = useState(new Set())
+  const [waitlistedEventIds, setWaitlistedEventIds] = useState(new Set())
   const [registrations, setRegistrations] = useState([])
   const [loading, setLoading] = useState(true)
 
@@ -68,15 +69,21 @@ export function useUserRegistrations() {
     // We query each event's registrations subcollection for this user
     const eventsUnsub = onSnapshot(collection(db, 'events'), async (eventsSnap) => {
       const regIds = new Set()
+      const waitIds = new Set()
       const regList = []
 
       for (const eventDoc of eventsSnap.docs) {
         const regRef = doc(db, 'events', eventDoc.id, 'registrations', user.uid)
         const regSnap = await getDoc(regRef)
         if (regSnap.exists() && !regSnap.data().banned) {
-          regIds.add(eventDoc.id)
+          const regData = regSnap.data()
+          if (regData.status === 'waitlisted') {
+            waitIds.add(eventDoc.id)
+          } else {
+            regIds.add(eventDoc.id)
+          }
           regList.push({
-            ...regSnap.data(),
+            ...regData,
             eventId: eventDoc.id,
             eventData: { id: eventDoc.id, eventId: eventDoc.id, ...eventDoc.data() },
           })
@@ -84,6 +91,7 @@ export function useUserRegistrations() {
       }
 
       setRegisteredEventIds(regIds)
+      setWaitlistedEventIds(waitIds)
       setRegistrations(regList)
       setLoading(false)
     })
@@ -91,7 +99,7 @@ export function useUserRegistrations() {
     return eventsUnsub
   }, [user])
 
-  return { registeredEventIds, registrations, loading }
+  return { registeredEventIds, waitlistedEventIds, registrations, loading }
 }
 
 /**
@@ -114,16 +122,13 @@ export async function registerForEvent(eventId, userProfile) {
       const currentCount = eventData.registeredCount || 0
       const maxParticipants = eventData.maxParticipants
 
-      // Check if event is full
-      if (currentCount >= maxParticipants) {
-        throw new Error('Sorry, this event is now full')
-      }
-
       // Check if already registered
       const existingReg = await transaction.get(regRef)
       if (existingReg.exists()) {
         throw new Error('You are already registered for this event')
       }
+
+      const isWaitlisted = currentCount >= maxParticipants
 
       // Create registration document
       transaction.set(regRef, {
@@ -137,12 +142,20 @@ export async function registerForEvent(eventId, userProfile) {
         attendance: 'not_marked',
         attendanceMarkedAt: null,
         banned: false,
+        status: isWaitlisted ? 'waitlisted' : 'registered',
       })
 
-      // Increment registered count
-      transaction.update(eventRef, {
-        registeredCount: currentCount + 1,
-      })
+      if (!isWaitlisted) {
+        // Increment registered count
+        transaction.update(eventRef, {
+          registeredCount: currentCount + 1,
+        })
+      } else {
+        // Increment waitlist count
+        transaction.update(eventRef, {
+          waitlistCount: (eventData.waitlistCount || 0) + 1,
+        })
+      }
     })
 
     toast.success('Registration successful! 🎉')
@@ -174,15 +187,59 @@ export async function unregisterFromEvent(eventId, userId) {
       }
 
       const eventData = eventDoc.data()
-      const currentCount = eventData.registeredCount || 0
+      const regData = existingReg.data()
+      const isWaitlisted = regData.status === 'waitlisted'
 
       // Delete registration document
       transaction.delete(regRef)
 
-      // Decrement registered count
-      transaction.update(eventRef, {
-        registeredCount: Math.max(0, currentCount - 1),
-      })
+      if (isWaitlisted) {
+        // Just decrement waitlist count
+        transaction.update(eventRef, {
+          waitlistCount: Math.max(0, (eventData.waitlistCount || 0) - 1),
+        })
+      } else {
+        let newRegisteredCount = Math.max(0, (eventData.registeredCount || 0) - 1)
+        let newWaitlistCount = eventData.waitlistCount || 0
+
+        // Check if there are waitlisted users to promote
+        if (newWaitlistCount > 0) {
+          // Fetch all registrations to find the next in line
+          const regsQuery = query(collection(db, 'events', eventId, 'registrations'))
+          const regsSnap = await transaction.get(regsQuery)
+          
+          const waitlistedUsers = []
+          regsSnap.forEach(doc => {
+            const data = doc.data()
+            if (data.status === 'waitlisted' && doc.id !== userId) {
+              waitlistedUsers.push({ id: doc.id, ...data })
+            }
+          })
+
+          if (waitlistedUsers.length > 0) {
+            // Sort by registeredAt (oldest first)
+            waitlistedUsers.sort((a, b) => a.registeredAt.toMillis() - b.registeredAt.toMillis())
+            const nextInLine = waitlistedUsers[0]
+
+            // Promote them
+            const nextRef = doc(db, 'events', eventId, 'registrations', nextInLine.id)
+            transaction.update(nextRef, {
+              status: 'registered'
+            })
+
+            newRegisteredCount += 1
+            newWaitlistCount = Math.max(0, newWaitlistCount - 1)
+            
+            // Note: In a real app, send push notification/email to nextInLine here
+          }
+        }
+
+        // Update event counts
+        transaction.update(eventRef, {
+          registeredCount: newRegisteredCount,
+          waitlistCount: newWaitlistCount,
+        })
+      }
     })
 
     toast.success('Registration removed')
