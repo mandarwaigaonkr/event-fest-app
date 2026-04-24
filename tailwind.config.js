@@ -28,7 +28,6 @@ export default {
         success: 'var(--color-success)',
         warning: 'var(--color-warning)',
         danger: 'var(--color-danger)',
-        // Compatibility fallbacks
         primary: {
           DEFAULT: 'var(--color-accent)',
           light: 'var(--color-accent-dim)',
@@ -40,14 +39,10 @@ export default {
         sans: ['Inter', 'system-ui', 'sans-serif'],
       },
       boxShadow: {
-        'glass': '0 4px 24px -1px rgba(0, 0, 0, 0.08), 0 0 0 1px rgba(255,255,255,0.05)',
-        'glass-lg': '0 8px 40px -4px rgba(0, 0, 0, 0.15)',
-        'glow': '0 0 24px var(--color-accent-glow)',
-        'glow-sm': '0 0 12px var(--color-accent-dim)',
-      },
-      borderRadius: {
-        '3xl': '1.5rem',
-        '4xl': '2rem',
+        'soft': '0 1px 3px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.06)',
+        'medium': '0 4px 12px rgba(0,0,0,0.10)',
+        'glow': '0 0 20px var(--color-accent-glow)',
+        'glow-sm': '0 0 10px var(--color-accent-dim)',
       },
     },
   },

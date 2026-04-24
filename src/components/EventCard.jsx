@@ -1,19 +1,16 @@
 // src/components/EventCard.jsx
-// Glass event card — clean, minimal, premium
-
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { CalendarIcon, MapPinIcon, UsersIcon } from '@heroicons/react/24/outline'
 import { formatDateTime } from '../utils/formatters'
 import ConfirmModal from './ConfirmModal'
 
-// Gradient fallback when no poster
 const GRADIENT_FALLBACKS = [
-  'from-indigo-500 to-purple-600',
-  'from-rose-500 to-orange-500',
-  'from-teal-500 to-cyan-500',
-  'from-violet-600 to-fuchsia-500',
-  'from-blue-600 to-cyan-500',
+  'from-violet-500 to-purple-600',
+  'from-rose-500 to-pink-600',
+  'from-teal-500 to-emerald-600',
+  'from-amber-500 to-orange-600',
+  'from-blue-500 to-indigo-600',
 ]
 
 function getGradient(eventId) {
@@ -44,7 +41,7 @@ export default function EventCard({
 
   return (
     <div
-      className="glass rounded-3xl overflow-hidden transition-all duration-200 hover:shadow-glass-lg cursor-pointer group"
+      className="bg-bg-card border border-bg-border rounded-2xl overflow-hidden transition-all duration-150 hover:border-text-muted/20 cursor-pointer group"
       onClick={() => navigate(`/event/${event.eventId || event.id}`)}
     >
       {/* Poster */}
@@ -53,38 +50,35 @@ export default function EventCard({
           <img
             src={event.posterURL}
             alt={event.name}
-            className="w-full h-full object-cover group-hover:scale-[1.03] transition-transform duration-500"
+            className="w-full h-full object-cover group-hover:scale-[1.02] transition-transform duration-300"
           />
         ) : (
           <div className={`w-full h-full bg-gradient-to-br ${getGradient(event.eventId || event.id)} flex items-center justify-center`}>
-            <span className="text-white/60 text-5xl font-bold">
+            <span className="text-white/50 text-5xl font-bold">
               {event.name?.charAt(0)}
             </span>
           </div>
         )}
 
-        {/* Gradient overlay at bottom of poster */}
-        <div className="absolute inset-x-0 bottom-0 h-20 bg-gradient-to-t from-black/50 to-transparent" />
-
         {/* Status Badge */}
         {isRegistered && (
-          <span className="absolute top-3 right-3 px-2.5 py-1 rounded-full bg-success/90 backdrop-blur-sm text-white text-[11px] font-semibold">
+          <span className="absolute top-3 right-3 px-2.5 py-1 rounded-lg bg-success text-white text-[11px] font-semibold">
             ✓ Registered
           </span>
         )}
         {isWaitlisted && (
-          <span className="absolute top-3 right-3 px-2.5 py-1 rounded-full bg-warning/90 backdrop-blur-sm text-white text-[11px] font-semibold">
+          <span className="absolute top-3 right-3 px-2.5 py-1 rounded-lg bg-warning text-white text-[11px] font-semibold">
             ⏳ Waitlisted
           </span>
         )}
         {isFull && !isRegistered && !isWaitlisted && (
-          <span className="absolute top-3 right-3 px-2.5 py-1 rounded-full bg-danger/90 backdrop-blur-sm text-white text-[11px] font-semibold">
+          <span className="absolute top-3 right-3 px-2.5 py-1 rounded-lg bg-danger text-white text-[11px] font-semibold">
             Full
           </span>
         )}
         {almostFull && !isFull && !isRegistered && !isWaitlisted && (
-          <span className="absolute top-3 right-3 px-2.5 py-1 rounded-full bg-warning/90 backdrop-blur-sm text-white text-[11px] font-semibold">
-            {spotsLeft} spot{spotsLeft > 1 ? 's' : ''} left
+          <span className="absolute top-3 right-3 px-2.5 py-1 rounded-lg bg-warning text-white text-[11px] font-semibold">
+            {spotsLeft} left
           </span>
         )}
       </div>
@@ -95,22 +89,22 @@ export default function EventCard({
           {event.name}
         </h3>
 
-        <div className="flex flex-col gap-1.5">
+        <div className="flex flex-col gap-1">
           <div className="flex items-center gap-2 text-text-secondary text-xs">
-            <CalendarIcon className="w-3.5 h-3.5 text-accent shrink-0" />
+            <CalendarIcon className="w-3.5 h-3.5 text-text-muted shrink-0" />
             <span>{formatDateTime(event.dateTime)}</span>
           </div>
           <div className="flex items-center gap-2 text-text-secondary text-xs">
-            <MapPinIcon className="w-3.5 h-3.5 text-accent shrink-0" />
+            <MapPinIcon className="w-3.5 h-3.5 text-text-muted shrink-0" />
             <span className="truncate">{event.venue}</span>
           </div>
           <div className="flex items-center gap-2 text-text-secondary text-xs">
-            <UsersIcon className="w-3.5 h-3.5 text-accent shrink-0" />
+            <UsersIcon className="w-3.5 h-3.5 text-text-muted shrink-0" />
             <span>{event.registeredCount || 0} / {event.maxParticipants}</span>
           </div>
         </div>
 
-        {/* Register / Unregister Button */}
+        {/* Button */}
         <button
           onClick={(e) => {
             e.stopPropagation()
@@ -121,10 +115,10 @@ export default function EventCard({
             }
           }}
           disabled={registering}
-          className={`w-full h-11 rounded-xl text-sm font-semibold transition-all duration-200 flex items-center justify-center gap-2 active:scale-[0.97]
+          className={`w-full h-10 rounded-xl text-sm font-medium transition-all duration-150 flex items-center justify-center gap-2 active:scale-[0.98]
             ${(isRegistered || isWaitlisted)
-              ? 'bg-bg-elevated text-text-primary border border-bg-border hover:bg-danger/10 hover:text-danger hover:border-danger/20'
-              : 'bg-accent text-white hover:bg-accent-light shadow-glow-sm'
+              ? 'bg-bg-elevated text-text-primary hover:text-danger'
+              : 'bg-accent text-white hover:opacity-90'
             }
             disabled:opacity-60 group/btn`}
         >
@@ -144,7 +138,7 @@ export default function EventCard({
           )}
           {(isRegistered || isWaitlisted) && !registering && (
             <span className="hidden group-hover/btn:inline">
-              {isWaitlisted ? 'Leave Waitlist' : 'Cancel Registration'}
+              {isWaitlisted ? 'Leave Waitlist' : 'Cancel'}
             </span>
           )}
         </button>
@@ -159,13 +153,13 @@ export default function EventCard({
         }
         message={
           modalState === 'register'
-            ? (isFull ? `The event is full. Would you like to join the waitlist for ${event.name}? If a spot opens up, you will be automatically registered.` : `Are you sure you want to register for ${event.name}?`)
-            : (isWaitlisted ? `Are you sure you want to leave the waitlist for ${event.name}?` : `Are you sure you want to remove your registration for ${event.name}? This will free up your spot.`)
+            ? (isFull ? `The event is full. Would you like to join the waitlist for ${event.name}?` : `Register for ${event.name}?`)
+            : (isWaitlisted ? `Leave the waitlist for ${event.name}?` : `Cancel your registration for ${event.name}?`)
         }
         confirmText={
           modalState === 'register'
-            ? (isFull ? 'Yes, Join Waitlist' : 'Yes, Register')
-            : 'Yes, Cancel it'
+            ? (isFull ? 'Join Waitlist' : 'Register')
+            : 'Yes, Cancel'
         }
         isDestructive={modalState === 'unregister'}
         onConfirm={handleConfirm}

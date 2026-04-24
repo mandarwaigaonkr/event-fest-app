@@ -1,5 +1,5 @@
 // src/components/Navbar.jsx
-// Floating glass bottom tab bar — iOS-inspired
+// Bottom tab bar — solid, clean
 
 import { NavLink } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
@@ -23,26 +23,15 @@ function NavItem({ to, label, Icon, IconActive }) {
     <NavLink
       to={to}
       className={({ isActive }) =>
-        `flex flex-col items-center gap-0.5 py-1.5 px-3 rounded-2xl transition-all duration-200 ${
-          isActive
-            ? 'text-accent'
-            : 'text-text-muted hover:text-text-secondary'
+        `flex flex-col items-center gap-0.5 min-w-[56px] py-1 transition-colors duration-150 ${
+          isActive ? 'text-accent' : 'text-text-muted hover:text-text-secondary'
         }`
       }
     >
       {({ isActive }) => (
         <>
-          {isActive ? (
-            <>
-              <IconActive className="w-[22px] h-[22px]" />
-              <div className="w-1 h-1 rounded-full bg-accent" />
-            </>
-          ) : (
-            <>
-              <Icon className="w-[22px] h-[22px]" />
-              <span className="text-[10px] font-medium">{label}</span>
-            </>
-          )}
+          {isActive ? <IconActive className="w-[22px] h-[22px]" /> : <Icon className="w-[22px] h-[22px]" />}
+          <span className="text-[10px] font-medium">{label}</span>
         </>
       )}
     </NavLink>
@@ -53,8 +42,8 @@ export default function Navbar() {
   const { isAdmin } = useAuth()
 
   return (
-    <nav className="fixed bottom-5 left-5 right-5 z-50 max-w-md mx-auto">
-      <div className="glass rounded-3xl shadow-glass-lg px-2 py-2 flex items-center justify-around safe-area-bottom">
+    <nav className="fixed bottom-0 left-0 right-0 z-50 bg-bg-card border-t border-bg-border">
+      <div className="max-w-lg mx-auto flex items-center justify-around px-2 py-1.5 safe-area-bottom">
         {isAdmin ? (
           <>
             <NavItem to="/admin" label="Events" Icon={Squares2X2Icon} IconActive={SquaresSolid} />
@@ -64,7 +53,7 @@ export default function Navbar() {
         ) : (
           <>
             <NavItem to="/dashboard" label="Home" Icon={HomeIcon} IconActive={HomeIconSolid} />
-            <NavItem to="/my-events" label="Events" Icon={CalendarDaysIcon} IconActive={CalendarSolid} />
+            <NavItem to="/my-events" label="My Events" Icon={CalendarDaysIcon} IconActive={CalendarSolid} />
             <NavItem to="/profile" label="Profile" Icon={UserIcon} IconActive={UserSolid} />
           </>
         )}
