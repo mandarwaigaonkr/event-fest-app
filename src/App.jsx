@@ -15,6 +15,7 @@ import Onboarding from './pages/auth/Onboarding'
 // User pages
 import Dashboard from './pages/user/Dashboard'
 import MyEvents from './pages/user/MyEvents'
+import EventDetails from './pages/user/EventDetails'
 
 // Admin pages
 import AdminDashboard from './pages/admin/AdminDashboard'
@@ -23,6 +24,7 @@ import EditEvent from './pages/admin/EditEvent'
 import EventParticipants from './pages/admin/EventParticipants'
 
 import { ThemeProvider } from './context/ThemeContext'
+import RoleSwitcher from './components/RoleSwitcher'
 
 export default function App() {
   return (
@@ -44,7 +46,10 @@ export default function App() {
             }}
           />
 
-        <Routes>
+          {/* Floating Dev Tool */}
+          <RoleSwitcher />
+
+          <Routes>
           {/* Public routes */}
           <Route path="/login" element={<Login />} />
 
@@ -57,6 +62,12 @@ export default function App() {
           } />
           <Route path="/my-events" element={
             <ProtectedRoute><MyEvents /></ProtectedRoute>
+          } />
+          <Route path="/event/:eventId" element={
+            <ProtectedRoute><EventDetails /></ProtectedRoute>
+          } />
+          <Route path="/profile" element={
+            <ProtectedRoute><Dashboard /></ProtectedRoute>
           } />
 
           {/* Admin-only routes */}
