@@ -25,7 +25,7 @@ function AttendanceBadge({ status }) {
   switch (status) {
     case 'present':
       return (
-        <span className="flex items-center gap-1 text-xs font-medium text-green-500">
+        <span className="flex items-center gap-1 text-xs font-medium text-success">
           <CheckCircleIcon className="w-3.5 h-3.5" /> Present
         </span>
       )
@@ -49,22 +49,22 @@ export default function MyEvents() {
   const navigate = useNavigate()
 
   return (
-    <div className="min-h-screen bg-bg-base pb-24 transition-colors duration-300">
+    <div className="min-h-screen bg-bg-base pb-28 transition-colors duration-300">
       {/* Header */}
-      <div className="sticky top-0 z-40 bg-bg-base/80 backdrop-blur-xl border-b border-bg-border/50">
-        <div className="max-w-lg mx-auto px-4 pt-5 pb-4">
-          <h1 className="text-xl font-bold text-text-primary">My Events</h1>
+      <div className="sticky top-0 z-40 bg-bg-base/80 backdrop-blur-xl">
+        <div className="max-w-lg mx-auto px-5 pt-6 pb-4">
+          <h1 className="text-xl font-semibold text-text-primary">My Events</h1>
           <p className="text-xs text-text-muted mt-0.5">Events you've registered for</p>
         </div>
       </div>
 
-      <div className="max-w-lg mx-auto px-4 pt-4">
+      <div className="max-w-lg mx-auto px-5 pt-2">
         {loading ? (
           <div className="flex flex-col gap-3">
             {[1, 2].map(i => (
-              <div key={i} className="bg-bg-card border border-bg-border rounded-2xl p-4 animate-pulse">
+              <div key={i} className="glass rounded-3xl p-4 animate-pulse">
                 <div className="flex gap-3">
-                  <div className="w-20 h-20 rounded-xl bg-bg-elevated shrink-0" />
+                  <div className="w-20 h-20 rounded-2xl bg-bg-elevated shrink-0" />
                   <div className="flex-1 space-y-2">
                     <div className="h-4 bg-bg-elevated rounded w-3/4" />
                     <div className="h-3 bg-bg-elevated rounded w-1/2" />
@@ -75,9 +75,9 @@ export default function MyEvents() {
             ))}
           </div>
         ) : registrations.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-20 text-center">
-            <div className="w-20 h-20 rounded-full bg-bg-elevated flex items-center justify-center mb-4">
-              <span className="text-3xl">📋</span>
+          <div className="flex flex-col items-center justify-center py-20 text-center animate-fade-up">
+            <div className="w-16 h-16 rounded-3xl bg-accent/10 flex items-center justify-center mb-4">
+              <span className="text-2xl">📋</span>
             </div>
             <h2 className="text-base font-semibold text-text-primary mb-1">No registrations yet</h2>
             <p className="text-sm text-text-muted max-w-xs mb-4">
@@ -85,14 +85,14 @@ export default function MyEvents() {
             </p>
             <button
               onClick={() => navigate('/dashboard')}
-              className="px-4 py-2 bg-accent text-white text-sm font-medium rounded-xl hover:bg-accent-light transition-colors"
+              className="px-5 py-2.5 bg-accent text-white text-sm font-medium rounded-xl hover:bg-accent-light transition-colors shadow-glow-sm"
             >
               Browse Events
             </button>
           </div>
         ) : (
           <div className="flex flex-col gap-3">
-            <p className="text-xs text-text-muted font-medium uppercase tracking-wide">
+            <p className="text-xs text-text-muted font-medium uppercase tracking-wider">
               {registrations.length} event{registrations.length !== 1 ? 's' : ''}
             </p>
 
@@ -106,10 +106,10 @@ export default function MyEvents() {
                 <div
                   key={reg.eventId}
                   onClick={() => navigate(`/event/${reg.eventId}`)}
-                  className="bg-bg-card border border-bg-border rounded-2xl p-4 flex gap-3 items-start cursor-pointer hover:border-accent/20 transition-all group"
+                  className="glass rounded-3xl p-4 flex gap-3 items-start cursor-pointer hover:shadow-glass-lg transition-all group animate-fade-up"
                 >
                   {/* Thumbnail */}
-                  <div className="w-20 h-20 rounded-xl overflow-hidden shrink-0">
+                  <div className="w-20 h-20 rounded-2xl overflow-hidden shrink-0">
                     {event?.posterURL ? (
                       <img
                         src={event.posterURL}
@@ -145,11 +145,11 @@ export default function MyEvents() {
 
                   {/* Status badge */}
                   {reg.status === 'waitlisted' ? (
-                    <span className="px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-500 text-[10px] font-semibold shrink-0">
+                    <span className="px-2 py-0.5 rounded-full bg-warning/10 text-warning text-[10px] font-semibold shrink-0">
                       Waitlisted
                     </span>
                   ) : (
-                    <span className="px-2 py-0.5 rounded-full bg-green-500/10 text-green-500 text-[10px] font-semibold shrink-0">
+                    <span className="px-2 py-0.5 rounded-full bg-success/10 text-success text-[10px] font-semibold shrink-0">
                       Registered
                     </span>
                   )}

@@ -1,5 +1,5 @@
 // src/components/EventCard.jsx
-// Reusable event card — shows poster, name, date, venue, spots, register button
+// Glass event card — clean, minimal, premium
 
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
@@ -30,7 +30,7 @@ export default function EventCard({
   registering = false,
 }) {
   const navigate = useNavigate()
-  const [modalState, setModalState] = useState(null) // 'register' | 'unregister' | null
+  const [modalState, setModalState] = useState(null)
 
   const spotsLeft = event.maxParticipants - (event.registeredCount || 0)
   const isFull = spotsLeft <= 0
@@ -44,57 +44,60 @@ export default function EventCard({
 
   return (
     <div
-      className="bg-bg-elevated rounded-[32px] p-4 flex flex-col gap-4 shadow-neu-out transition-all duration-300 active:shadow-neu-in cursor-pointer group mb-4"
+      className="glass rounded-3xl overflow-hidden transition-all duration-200 hover:shadow-glass-lg cursor-pointer group"
       onClick={() => navigate(`/event/${event.eventId || event.id}`)}
     >
       {/* Poster */}
-      <div className="relative h-48 w-full rounded-2xl overflow-hidden shadow-inner">
+      <div className="relative h-44 overflow-hidden">
         {event.posterURL ? (
           <img
             src={event.posterURL}
             alt={event.name}
-            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+            className="w-full h-full object-cover group-hover:scale-[1.03] transition-transform duration-500"
           />
         ) : (
           <div className={`w-full h-full bg-gradient-to-br ${getGradient(event.eventId || event.id)} flex items-center justify-center`}>
-            <span className="text-white/80 text-4xl font-bold">
+            <span className="text-white/60 text-5xl font-bold">
               {event.name?.charAt(0)}
             </span>
           </div>
         )}
 
+        {/* Gradient overlay at bottom of poster */}
+        <div className="absolute inset-x-0 bottom-0 h-20 bg-gradient-to-t from-black/50 to-transparent" />
+
         {/* Status Badge */}
         {isRegistered && (
-          <span className="absolute top-3 right-3 px-2.5 py-1 rounded-full bg-green-500/90 backdrop-blur-sm text-white text-xs font-semibold shadow-md">
+          <span className="absolute top-3 right-3 px-2.5 py-1 rounded-full bg-success/90 backdrop-blur-sm text-white text-[11px] font-semibold">
             ✓ Registered
           </span>
         )}
         {isWaitlisted && (
-          <span className="absolute top-3 right-3 px-2.5 py-1 rounded-full bg-amber-500/90 backdrop-blur-sm text-white text-xs font-semibold shadow-md">
+          <span className="absolute top-3 right-3 px-2.5 py-1 rounded-full bg-warning/90 backdrop-blur-sm text-white text-[11px] font-semibold">
             ⏳ Waitlisted
           </span>
         )}
         {isFull && !isRegistered && !isWaitlisted && (
-          <span className="absolute top-3 right-3 px-2.5 py-1 rounded-full bg-red-500/90 backdrop-blur-sm text-white text-xs font-semibold shadow-md">
+          <span className="absolute top-3 right-3 px-2.5 py-1 rounded-full bg-danger/90 backdrop-blur-sm text-white text-[11px] font-semibold">
             Full
           </span>
         )}
         {almostFull && !isFull && !isRegistered && !isWaitlisted && (
-          <span className="absolute top-3 right-3 px-2.5 py-1 rounded-full bg-amber-500/90 backdrop-blur-sm text-white text-xs font-semibold shadow-md">
+          <span className="absolute top-3 right-3 px-2.5 py-1 rounded-full bg-warning/90 backdrop-blur-sm text-white text-[11px] font-semibold">
             {spotsLeft} spot{spotsLeft > 1 ? 's' : ''} left
           </span>
         )}
       </div>
 
       {/* Content */}
-      <div className="flex flex-col gap-2 px-1">
-        <h3 className="text-lg font-bold text-white line-clamp-1 tracking-wide">
+      <div className="p-4 flex flex-col gap-3">
+        <h3 className="text-[15px] font-semibold text-text-primary line-clamp-1">
           {event.name}
         </h3>
 
-        <div className="flex flex-col gap-1">
-          <div className="flex items-center gap-2 text-text-secondary text-xs font-medium">
-            <CalendarIcon className="w-4 h-4 text-accent shrink-0" />
+        <div className="flex flex-col gap-1.5">
+          <div className="flex items-center gap-2 text-text-secondary text-xs">
+            <CalendarIcon className="w-3.5 h-3.5 text-accent shrink-0" />
             <span>{formatDateTime(event.dateTime)}</span>
           </div>
           <div className="flex items-center gap-2 text-text-secondary text-xs">
@@ -118,12 +121,12 @@ export default function EventCard({
             }
           }}
           disabled={registering}
-          className={`w-full h-12 mt-2 rounded-2xl text-sm font-bold tracking-wide transition-all duration-300 flex items-center justify-center gap-2 shadow-neu-out active:shadow-neu-in
+          className={`w-full h-11 rounded-xl text-sm font-semibold transition-all duration-200 flex items-center justify-center gap-2 active:scale-[0.97]
             ${(isRegistered || isWaitlisted)
-              ? 'bg-bg-card text-text-primary hover:text-danger border border-white/5'
-              : 'bg-gradient-to-r from-accent to-accent-light text-white shadow-glow hover:shadow-glow-sm border border-white/10'
+              ? 'bg-bg-elevated text-text-primary border border-bg-border hover:bg-danger/10 hover:text-danger hover:border-danger/20'
+              : 'bg-accent text-white hover:bg-accent-light shadow-glow-sm'
             }
-            disabled:opacity-70 group/btn`}
+            disabled:opacity-60 group/btn`}
         >
           {registering ? (
             <>

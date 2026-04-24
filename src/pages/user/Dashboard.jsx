@@ -15,7 +15,7 @@ export default function Dashboard() {
   const { registeredEventIds, waitlistedEventIds, registrations, loading: regsLoading } = useUserRegistrations()
   const { isDark, toggleTheme } = useTheme()
   const [search, setSearch] = useState('')
-  const [activeTab, setActiveTab] = useState('upcoming') // 'upcoming' | 'attended'
+  const [activeTab, setActiveTab] = useState('upcoming')
   const [registeringId, setRegisteringId] = useState(null)
 
   const loading = eventsLoading || regsLoading
@@ -58,65 +58,74 @@ export default function Dashboard() {
   const firstName = user?.displayName?.split(' ')[0] || 'there'
 
   return (
-    <div className="min-h-screen bg-bg-base pb-32 transition-colors duration-300 relative overflow-hidden">
-      
-      {/* Neumorphic Diagonal Background Splash */}
-      <div className="fixed inset-0 pointer-events-none z-0">
-         <div className="absolute top-[-10%] right-[-30%] w-[150%] h-[70%] bg-neu-diagonal -rotate-12 opacity-80 blur-[2px]" />
-      </div>
-
+    <div className="min-h-screen bg-bg-base pb-28 transition-colors duration-300">
       {/* Header */}
-      <div className="relative z-40 pt-12 pb-4">
-        <div className="max-w-lg mx-auto px-6">
-          <div className="flex items-center justify-between mb-8">
-            <h1 className="text-2xl font-extrabold text-white tracking-wide">
-              Explore Events
-            </h1>
-            {user?.photoURL ? (
-              <img
-                src={user.photoURL}
-                alt="Avatar"
-                className="w-10 h-10 rounded-xl border border-white/10 shadow-neu-out"
-              />
-            ) : (
-              <div className="w-10 h-10 rounded-xl bg-bg-elevated flex items-center justify-center shadow-neu-out border border-white/5">
-                <span className="text-white text-sm font-bold">
-                  {firstName.charAt(0)}
-                </span>
+      <div className="sticky top-0 z-40 bg-bg-base/80 backdrop-blur-xl">
+        <div className="max-w-lg mx-auto px-5 pt-6 pb-4">
+          <div className="flex items-center justify-between mb-5">
+            <div className="flex items-center gap-3">
+              {user?.photoURL ? (
+                <img
+                  src={user.photoURL}
+                  alt="Avatar"
+                  className="w-10 h-10 rounded-2xl border border-bg-border"
+                />
+              ) : (
+                <div className="w-10 h-10 rounded-2xl bg-accent/10 flex items-center justify-center">
+                  <span className="text-accent text-sm font-bold">
+                    {firstName.charAt(0)}
+                  </span>
+                </div>
+              )}
+              <div>
+                <h1 className="text-lg font-semibold text-text-primary">
+                  Hey, {firstName} 👋
+                </h1>
+                <p className="text-xs text-text-muted">
+                  Find your next event
+                </p>
               </div>
-            )}
+            </div>
+
+            <button
+              onClick={toggleTheme}
+              className="w-10 h-10 rounded-2xl glass flex items-center justify-center text-text-muted hover:text-accent transition-colors"
+              aria-label="Toggle theme"
+            >
+              {isDark ? <SunIcon className="w-[18px] h-[18px]" /> : <MoonIcon className="w-[18px] h-[18px]" />}
+            </button>
           </div>
 
           {/* Search */}
-          <div className="relative mb-6 shadow-neu-out rounded-2xl">
-            <MagnifyingGlassIcon className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-white/50" />
+          <div className="relative mb-4">
+            <MagnifyingGlassIcon className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-text-muted" />
             <input
               type="text"
               placeholder="Search events..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="w-full h-12 pl-12 pr-4 rounded-2xl bg-bg-elevated/80 backdrop-blur-md border border-white/5 text-sm text-white placeholder-white/40 outline-none focus:border-accent transition-all shadow-inner"
+              className="w-full h-11 pl-10 pr-4 rounded-2xl glass text-sm text-text-primary placeholder-text-muted outline-none focus:border-accent/40 transition-colors"
             />
           </div>
 
           {/* Tabs */}
-          <div className="flex gap-4 overflow-x-auto pb-2 scrollbar-hide">
+          <div className="flex gap-1 p-1 glass rounded-2xl">
             <button
               onClick={() => setActiveTab('upcoming')}
-              className={`px-6 py-2.5 text-sm font-bold rounded-xl transition-all whitespace-nowrap shadow-neu-out border border-white/5 ${
+              className={`flex-1 py-2 text-sm font-medium rounded-xl transition-all duration-200 ${
                 activeTab === 'upcoming'
-                  ? 'bg-gradient-to-br from-accent to-accent-light text-white shadow-glow-sm'
-                  : 'bg-bg-elevated text-text-secondary hover:text-white'
+                  ? 'bg-accent text-white shadow-glow-sm'
+                  : 'text-text-muted hover:text-text-primary'
               }`}
             >
               Upcoming
             </button>
             <button
               onClick={() => setActiveTab('attended')}
-              className={`px-6 py-2.5 text-sm font-bold rounded-xl transition-all whitespace-nowrap shadow-neu-out border border-white/5 ${
+              className={`flex-1 py-2 text-sm font-medium rounded-xl transition-all duration-200 ${
                 activeTab === 'attended'
-                  ? 'bg-gradient-to-br from-accent to-accent-light text-white shadow-glow-sm'
-                  : 'bg-bg-elevated text-text-secondary hover:text-white'
+                  ? 'bg-accent text-white shadow-glow-sm'
+                  : 'text-text-muted hover:text-text-primary'
               }`}
             >
               Attended
@@ -126,12 +135,12 @@ export default function Dashboard() {
       </div>
 
       {/* Content */}
-      <div className="relative z-10 max-w-lg mx-auto px-6 pt-2">
+      <div className="max-w-lg mx-auto px-5 pt-3">
         {loading ? (
-          <div className="flex flex-col gap-6">
+          <div className="flex flex-col gap-4">
             {[1, 2, 3].map(i => (
-              <div key={i} className="bg-bg-elevated rounded-[32px] overflow-hidden animate-pulse shadow-neu-out">
-                <div className="h-48 m-4 rounded-2xl bg-bg-card" />
+              <div key={i} className="glass rounded-3xl overflow-hidden animate-pulse">
+                <div className="h-44 bg-bg-elevated" />
                 <div className="p-4 space-y-3">
                   <div className="h-4 bg-bg-elevated rounded w-3/4" />
                   <div className="h-3 bg-bg-elevated rounded w-1/2" />
@@ -142,9 +151,9 @@ export default function Dashboard() {
             ))}
           </div>
         ) : displayEvents.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-20 text-center">
-            <div className="w-20 h-20 rounded-full bg-bg-elevated flex items-center justify-center mb-4">
-              <span className="text-3xl">🎪</span>
+          <div className="flex flex-col items-center justify-center py-20 text-center animate-fade-up">
+            <div className="w-16 h-16 rounded-3xl bg-accent/10 flex items-center justify-center mb-4">
+              <span className="text-2xl">🎪</span>
             </div>
             <h2 className="text-base font-semibold text-text-primary mb-1">
               {search ? 'No events found' : activeTab === 'upcoming' ? 'No upcoming events' : 'No attended events'}
@@ -153,17 +162,17 @@ export default function Dashboard() {
               {search
                 ? `Nothing matched "${search}". Try a different search.`
                 : activeTab === 'upcoming'
-                ? 'Check back later for new events. Exciting things are coming soon!'
+                ? 'Check back later for new events!'
                 : "You haven't attended any events yet."}
             </p>
           </div>
         ) : (
-          <div className="flex flex-col gap-6">
+          <div className="flex flex-col gap-4">
             <div className="flex items-center justify-between">
-              <h2 className="text-sm font-bold text-white/50 uppercase tracking-wider">
-                {activeTab === 'upcoming' ? 'All Events' : 'Past Events'}
+              <h2 className="text-xs font-medium text-text-muted uppercase tracking-wider">
+                {activeTab === 'upcoming' ? 'All Events' : 'Attended'}
               </h2>
-              <span className="text-xs font-bold text-white/30 bg-white/5 px-2 py-1 rounded-md">
+              <span className="text-xs text-text-muted">
                 {displayEvents.length} event{displayEvents.length !== 1 ? 's' : ''}
               </span>
             </div>
@@ -182,9 +191,7 @@ export default function Dashboard() {
         )}
       </div>
 
-      <div className="relative z-50">
-        <Navbar />
-      </div>
+      <Navbar />
     </div>
   )
 }

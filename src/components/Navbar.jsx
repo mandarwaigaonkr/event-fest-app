@@ -1,5 +1,5 @@
 // src/components/Navbar.jsx
-// Floating neumorphic bottom navigation bar
+// Floating glass bottom tab bar — iOS-inspired
 
 import { NavLink } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
@@ -10,23 +10,39 @@ import {
   PlusIcon,
   Squares2X2Icon,
 } from '@heroicons/react/24/outline'
+import {
+  HomeIcon as HomeIconSolid,
+  CalendarDaysIcon as CalendarSolid,
+  UserIcon as UserSolid,
+  PlusIcon as PlusSolid,
+  Squares2X2Icon as SquaresSolid,
+} from '@heroicons/react/24/solid'
 
-function NavItem({ to, label, Icon }) {
+function NavItem({ to, label, Icon, IconActive }) {
   return (
     <NavLink
       to={to}
       className={({ isActive }) =>
-        `flex items-center justify-center transition-all duration-300 ${
-          isActive 
-            ? 'bg-accent/90 shadow-glow-sm px-4 py-2.5 rounded-2xl gap-2 text-white' 
-            : 'w-12 h-12 rounded-full text-text-muted hover:text-white/80'
+        `flex flex-col items-center gap-0.5 py-1.5 px-3 rounded-2xl transition-all duration-200 ${
+          isActive
+            ? 'text-accent'
+            : 'text-text-muted hover:text-text-secondary'
         }`
       }
     >
       {({ isActive }) => (
         <>
-          <Icon className={`${isActive ? 'w-5 h-5' : 'w-6 h-6'} shrink-0`} />
-          {isActive && <span className="text-sm font-semibold tracking-wide">{label}</span>}
+          {isActive ? (
+            <>
+              <IconActive className="w-[22px] h-[22px]" />
+              <div className="w-1 h-1 rounded-full bg-accent" />
+            </>
+          ) : (
+            <>
+              <Icon className="w-[22px] h-[22px]" />
+              <span className="text-[10px] font-medium">{label}</span>
+            </>
+          )}
         </>
       )}
     </NavLink>
@@ -37,23 +53,22 @@ export default function Navbar() {
   const { isAdmin } = useAuth()
 
   return (
-    <nav className="fixed bottom-4 left-4 right-4 max-w-sm mx-auto z-50 bg-bg-base/95 backdrop-blur-2xl rounded-[32px] shadow-[0_20px_50px_rgba(0,0,0,0.8),inset_0_1px_1px_rgba(255,255,255,0.1)] border border-white/5 pt-2.5 pb-4 px-4 flex items-center justify-between">
-      {isAdmin ? (
-        <>
-          <NavItem to="/admin" label="Events" Icon={Squares2X2Icon} />
-          <NavItem to="/admin/create-event" label="Create" Icon={PlusIcon} />
-          <NavItem to="/profile" label="Profile" Icon={UserIcon} />
-        </>
-      ) : (
-        <>
-          <NavItem to="/dashboard" label="Home" Icon={HomeIcon} />
-          <NavItem to="/my-events" label="My Events" Icon={CalendarDaysIcon} />
-          <NavItem to="/profile" label="Profile" Icon={UserIcon} />
-        </>
-      )}
-
-      {/* iOS Home Indicator fake */}
-      <div className="absolute bottom-1.5 left-1/2 -translate-x-1/2 w-32 h-1 bg-white/20 rounded-full" />
+    <nav className="fixed bottom-5 left-5 right-5 z-50 max-w-md mx-auto">
+      <div className="glass rounded-3xl shadow-glass-lg px-2 py-2 flex items-center justify-around safe-area-bottom">
+        {isAdmin ? (
+          <>
+            <NavItem to="/admin" label="Events" Icon={Squares2X2Icon} IconActive={SquaresSolid} />
+            <NavItem to="/admin/create-event" label="Create" Icon={PlusIcon} IconActive={PlusSolid} />
+            <NavItem to="/profile" label="Profile" Icon={UserIcon} IconActive={UserSolid} />
+          </>
+        ) : (
+          <>
+            <NavItem to="/dashboard" label="Home" Icon={HomeIcon} IconActive={HomeIconSolid} />
+            <NavItem to="/my-events" label="Events" Icon={CalendarDaysIcon} IconActive={CalendarSolid} />
+            <NavItem to="/profile" label="Profile" Icon={UserIcon} IconActive={UserSolid} />
+          </>
+        )}
+      </div>
     </nav>
   )
 }

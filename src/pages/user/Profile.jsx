@@ -1,5 +1,5 @@
 // src/pages/user/Profile.jsx
-// User profile — display details, theme toggle, logout
+// User profile — glass design
 
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
@@ -41,30 +41,30 @@ export default function Profile() {
   const firstName = user?.displayName?.split(' ')[0] || 'User'
 
   return (
-    <div className="min-h-screen bg-bg-base pb-24 transition-colors duration-300">
+    <div className="min-h-screen bg-bg-base pb-28 transition-colors duration-300">
       {/* Header */}
-      <div className="bg-bg-base/80 backdrop-blur-xl border-b border-bg-border/50">
-        <div className="max-w-lg mx-auto px-4 pt-5 pb-4">
-          <h1 className="text-xl font-bold text-text-primary">Profile</h1>
+      <div className="bg-bg-base/80 backdrop-blur-xl">
+        <div className="max-w-lg mx-auto px-5 pt-6 pb-4">
+          <h1 className="text-xl font-semibold text-text-primary">Profile</h1>
         </div>
       </div>
 
-      <div className="max-w-lg mx-auto px-4 pt-5 space-y-5">
+      <div className="max-w-lg mx-auto px-5 pt-3 space-y-4">
         {/* Avatar + Name Card */}
-        <div className="bg-bg-card border border-bg-border rounded-2xl p-5 flex items-center gap-4">
+        <div className="glass rounded-3xl p-5 flex items-center gap-4 animate-fade-up">
           {user?.photoURL ? (
             <img
               src={user.photoURL}
               alt="Avatar"
-              className="w-16 h-16 rounded-full border-2 border-accent/30"
+              className="w-16 h-16 rounded-2xl border border-bg-border"
             />
           ) : (
-            <div className="w-16 h-16 rounded-full bg-accent flex items-center justify-center">
-              <span className="text-white text-2xl font-bold">{firstName.charAt(0)}</span>
+            <div className="w-16 h-16 rounded-2xl bg-accent/10 flex items-center justify-center">
+              <span className="text-accent text-2xl font-bold">{firstName.charAt(0)}</span>
             </div>
           )}
           <div className="flex-1 min-w-0">
-            <h2 className="text-lg font-bold text-text-primary truncate">
+            <h2 className="text-lg font-semibold text-text-primary truncate">
               {user?.displayName}
             </h2>
             <p className="text-xs text-text-muted truncate">{user?.email}</p>
@@ -77,9 +77,9 @@ export default function Profile() {
         </div>
 
         {/* Profile Details */}
-        <div className="bg-bg-card border border-bg-border rounded-2xl overflow-hidden">
+        <div className="glass rounded-3xl overflow-hidden animate-fade-up" style={{ animationDelay: '0.05s' }}>
           <div className="px-5 pt-4 pb-2">
-            <h3 className="text-xs font-semibold text-text-muted uppercase tracking-wide">
+            <h3 className="text-xs font-medium text-text-muted uppercase tracking-wider">
               Your Details
             </h3>
           </div>
@@ -109,9 +109,9 @@ export default function Profile() {
         </div>
 
         {/* Settings */}
-        <div className="bg-bg-card border border-bg-border rounded-2xl overflow-hidden">
+        <div className="glass rounded-3xl overflow-hidden animate-fade-up" style={{ animationDelay: '0.1s' }}>
           <div className="px-5 pt-4 pb-2">
-            <h3 className="text-xs font-semibold text-text-muted uppercase tracking-wide">
+            <h3 className="text-xs font-medium text-text-muted uppercase tracking-wider">
               Settings
             </h3>
           </div>
@@ -119,9 +119,9 @@ export default function Profile() {
           {/* Theme Toggle */}
           <button
             onClick={toggleTheme}
-            className="w-full flex items-center gap-4 px-5 py-3.5 hover:bg-bg-elevated transition-colors"
+            className="w-full flex items-center gap-4 px-5 py-3.5 hover:bg-bg-elevated/50 transition-colors"
           >
-            <div className="w-9 h-9 rounded-xl bg-bg-elevated flex items-center justify-center text-accent">
+            <div className="w-9 h-9 rounded-xl bg-accent/10 flex items-center justify-center text-accent">
               {isDark ? <SunIcon className="w-5 h-5" /> : <MoonIcon className="w-5 h-5" />}
             </div>
             <div className="flex-1 text-left">
@@ -129,16 +129,16 @@ export default function Profile() {
               <p className="text-xs text-text-muted">{isDark ? 'Dark mode' : 'Light mode'}</p>
             </div>
             <div className={`w-11 h-6 rounded-full transition-colors relative ${isDark ? 'bg-accent' : 'bg-bg-border'}`}>
-              <div className={`absolute top-0.5 w-5 h-5 rounded-full bg-white shadow transition-transform ${isDark ? 'translate-x-5' : 'translate-x-0.5'}`} />
+              <div className={`absolute top-0.5 w-5 h-5 rounded-full bg-white shadow-sm transition-transform ${isDark ? 'translate-x-5' : 'translate-x-0.5'}`} />
             </div>
           </button>
 
           {/* Logout */}
           <button
             onClick={() => setShowLogoutModal(true)}
-            className="w-full flex items-center gap-4 px-5 py-3.5 hover:bg-red-500/5 transition-colors border-t border-bg-border"
+            className="w-full flex items-center gap-4 px-5 py-3.5 hover:bg-danger/5 transition-colors border-t border-bg-border"
           >
-            <div className="w-9 h-9 rounded-xl bg-red-500/10 flex items-center justify-center text-danger">
+            <div className="w-9 h-9 rounded-xl bg-danger/10 flex items-center justify-center text-danger">
               <ArrowRightStartOnRectangleIcon className="w-5 h-5" />
             </div>
             <p className="text-sm font-medium text-danger">Log out</p>
@@ -171,7 +171,7 @@ export default function Profile() {
 function ProfileRow({ icon, label, value }) {
   return (
     <div className="flex items-center gap-4 px-5 py-3.5">
-      <div className="w-9 h-9 rounded-xl bg-bg-elevated flex items-center justify-center text-accent shrink-0">
+      <div className="w-9 h-9 rounded-xl bg-accent/10 flex items-center justify-center text-accent shrink-0">
         {icon}
       </div>
       <div className="flex-1 min-w-0">
