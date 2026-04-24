@@ -16,12 +16,14 @@ import Onboarding from './pages/auth/Onboarding'
 import Dashboard from './pages/user/Dashboard'
 import MyEvents from './pages/user/MyEvents'
 import EventDetails from './pages/user/EventDetails'
+import Profile from './pages/user/Profile'
 
 // Admin pages
 import AdminDashboard from './pages/admin/AdminDashboard'
 import CreateEvent from './pages/admin/CreateEvent'
 import EditEvent from './pages/admin/EditEvent'
 import EventParticipants from './pages/admin/EventParticipants'
+import TakeAttendance from './pages/admin/TakeAttendance'
 
 import { ThemeProvider } from './context/ThemeContext'
 import RoleSwitcher from './components/RoleSwitcher'
@@ -67,7 +69,7 @@ export default function App() {
             <ProtectedRoute><EventDetails /></ProtectedRoute>
           } />
           <Route path="/profile" element={
-            <ProtectedRoute><Dashboard /></ProtectedRoute>
+            <ProtectedRoute><Profile /></ProtectedRoute>
           } />
 
           {/* Admin-only routes */}
@@ -82,6 +84,9 @@ export default function App() {
           } />
           <Route path="/admin/events/:eventId/participants" element={
             <AdminRoute><EventParticipants /></AdminRoute>
+          } />
+          <Route path="/admin/events/:eventId/attendance" element={
+            <AdminRoute><TakeAttendance /></AdminRoute>
           } />
 
           {/* Default redirect */}
