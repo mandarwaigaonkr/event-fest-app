@@ -58,74 +58,65 @@ export default function Dashboard() {
   const firstName = user?.displayName?.split(' ')[0] || 'there'
 
   return (
-    <div className="min-h-screen bg-bg-base pb-24 transition-colors duration-300">
-      {/* Header */}
-      <div className="sticky top-0 z-40 bg-bg-base/80 backdrop-blur-xl border-b border-bg-border/50">
-        <div className="max-w-lg mx-auto px-4 pt-5 pb-4">
-          <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center gap-3">
-              {user?.photoURL ? (
-                <img
-                  src={user.photoURL}
-                  alt="Avatar"
-                  className="w-10 h-10 rounded-full border-2 border-accent/30"
-                />
-              ) : (
-                <div className="w-10 h-10 rounded-full bg-accent flex items-center justify-center">
-                  <span className="text-white text-sm font-bold">
-                    {firstName.charAt(0)}
-                  </span>
-                </div>
-              )}
-              <div>
-                <h1 className="text-lg font-bold text-text-primary">
-                  Hello, {firstName}
-                </h1>
-                <p className="text-xs text-text-muted">
-                  Explore upcoming events
-                </p>
-              </div>
-            </div>
+    <div className="min-h-screen bg-bg-base pb-32 transition-colors duration-300 relative overflow-hidden">
+      
+      {/* Neumorphic Diagonal Background Splash */}
+      <div className="fixed inset-0 pointer-events-none z-0">
+         <div className="absolute top-[-10%] right-[-30%] w-[150%] h-[70%] bg-neu-diagonal -rotate-12 opacity-80 blur-[2px]" />
+      </div>
 
-            <button
-              onClick={toggleTheme}
-              className="p-2 rounded-xl bg-bg-elevated border border-bg-border text-text-secondary hover:text-accent hover:border-accent/50 transition-all"
-              aria-label="Toggle theme"
-            >
-              {isDark ? <SunIcon className="w-5 h-5" /> : <MoonIcon className="w-5 h-5" />}
-            </button>
+      {/* Header */}
+      <div className="relative z-40 pt-12 pb-4">
+        <div className="max-w-lg mx-auto px-6">
+          <div className="flex items-center justify-between mb-8">
+            <h1 className="text-2xl font-extrabold text-white tracking-wide">
+              Explore Events
+            </h1>
+            {user?.photoURL ? (
+              <img
+                src={user.photoURL}
+                alt="Avatar"
+                className="w-10 h-10 rounded-xl border border-white/10 shadow-neu-out"
+              />
+            ) : (
+              <div className="w-10 h-10 rounded-xl bg-bg-elevated flex items-center justify-center shadow-neu-out border border-white/5">
+                <span className="text-white text-sm font-bold">
+                  {firstName.charAt(0)}
+                </span>
+              </div>
+            )}
           </div>
 
           {/* Search */}
-          <div className="relative mb-4">
-            <MagnifyingGlassIcon className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-text-muted" />
+          <div className="relative mb-6 shadow-neu-out rounded-2xl">
+            <MagnifyingGlassIcon className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-white/50" />
             <input
               type="text"
               placeholder="Search events..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="w-full h-10 pl-10 pr-4 rounded-xl bg-bg-elevated border border-bg-border text-sm text-text-primary placeholder-text-muted outline-none focus:border-accent transition-colors"
+              className="w-full h-12 pl-12 pr-4 rounded-2xl bg-bg-elevated/80 backdrop-blur-md border border-white/5 text-sm text-white placeholder-white/40 outline-none focus:border-accent transition-all shadow-inner"
             />
           </div>
 
           {/* Tabs */}
-          <div className="flex bg-bg-elevated p-1 rounded-xl">
+          <div className="flex gap-4 overflow-x-auto pb-2 scrollbar-hide">
             <button
               onClick={() => setActiveTab('upcoming')}
-              className={`flex-1 py-2 text-sm font-semibold rounded-lg transition-all ${
+              className={`px-6 py-2.5 text-sm font-bold rounded-xl transition-all whitespace-nowrap shadow-neu-out border border-white/5 ${
                 activeTab === 'upcoming'
-                  ? 'bg-bg-card text-text-primary shadow-sm'
-                  : 'text-text-muted hover:text-text-primary'
+                  ? 'bg-gradient-to-br from-accent to-accent-light text-white shadow-glow-sm'
+                  : 'bg-bg-elevated text-text-secondary hover:text-white'
               }`}
             >
-              Upcoming Events
+              Upcoming
             </button>
             <button
               onClick={() => setActiveTab('attended')}
-              className={`flex-1 py-2 text-sm font-semibold rounded-lg transition-all ${
+              className={`px-6 py-2.5 text-sm font-bold rounded-xl transition-all whitespace-nowrap shadow-neu-out border border-white/5 ${
                 activeTab === 'attended'
-                  ? 'bg-bg-card text-text-primary shadow-sm'
-                  : 'text-text-muted hover:text-text-primary'
+                  ? 'bg-gradient-to-br from-accent to-accent-light text-white shadow-glow-sm'
+                  : 'bg-bg-elevated text-text-secondary hover:text-white'
               }`}
             >
               Attended
@@ -135,12 +126,12 @@ export default function Dashboard() {
       </div>
 
       {/* Content */}
-      <div className="max-w-lg mx-auto px-4 pt-4">
+      <div className="relative z-10 max-w-lg mx-auto px-6 pt-2">
         {loading ? (
-          <div className="flex flex-col gap-4">
+          <div className="flex flex-col gap-6">
             {[1, 2, 3].map(i => (
-              <div key={i} className="bg-bg-card border border-bg-border rounded-2xl overflow-hidden animate-pulse">
-                <div className="h-44 bg-bg-elevated" />
+              <div key={i} className="bg-bg-elevated rounded-[32px] overflow-hidden animate-pulse shadow-neu-out">
+                <div className="h-48 m-4 rounded-2xl bg-bg-card" />
                 <div className="p-4 space-y-3">
                   <div className="h-4 bg-bg-elevated rounded w-3/4" />
                   <div className="h-3 bg-bg-elevated rounded w-1/2" />
@@ -167,12 +158,12 @@ export default function Dashboard() {
             </p>
           </div>
         ) : (
-          <div className="flex flex-col gap-4">
+          <div className="flex flex-col gap-6">
             <div className="flex items-center justify-between">
-              <h2 className="text-sm font-semibold text-text-secondary uppercase tracking-wide">
-                {activeTab === 'upcoming' ? 'Upcoming Events' : 'Attended Events'}
+              <h2 className="text-sm font-bold text-white/50 uppercase tracking-wider">
+                {activeTab === 'upcoming' ? 'All Events' : 'Past Events'}
               </h2>
-              <span className="text-xs text-text-muted">
+              <span className="text-xs font-bold text-white/30 bg-white/5 px-2 py-1 rounded-md">
                 {displayEvents.length} event{displayEvents.length !== 1 ? 's' : ''}
               </span>
             </div>
@@ -191,7 +182,9 @@ export default function Dashboard() {
         )}
       </div>
 
-      <Navbar />
+      <div className="relative z-50">
+        <Navbar />
+      </div>
     </div>
   )
 }

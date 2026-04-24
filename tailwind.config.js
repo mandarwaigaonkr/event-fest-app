@@ -40,9 +40,14 @@ export default {
         sans: ['Inter', 'system-ui', 'sans-serif'],
       },
       boxShadow: {
+        'neu-out': '8px 8px 16px rgba(18, 21, 28, 0.8), -8px -8px 16px rgba(45, 54, 73, 0.4)',
+        'neu-in': 'inset 4px 4px 8px rgba(18, 21, 28, 0.8), inset -4px -4px 8px rgba(45, 54, 73, 0.4)',
         'glow': '0 0 20px var(--color-accent-glow)',
         'glow-sm': '0 0 10px var(--color-accent-dim)',
       },
+      backgroundImage: {
+        'neu-diagonal': 'linear-gradient(135deg, rgba(75, 76, 237, 0.6) 0%, rgba(55, 182, 233, 0.4) 100%)',
+      }
     },
   },
   plugins: [],

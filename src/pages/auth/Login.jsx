@@ -1,6 +1,4 @@
 // src/pages/auth/Login.jsx
-// Google Sign-In — OLED dark theme
-
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { signInWithPopup, signInWithCredential, GoogleAuthProvider } from 'firebase/auth'
@@ -9,15 +7,12 @@ import { GoogleAuth } from '@codetrix-studio/capacitor-google-auth'
 import { doc, getDoc, setDoc, serverTimestamp } from 'firebase/firestore'
 import { auth, db, googleProvider } from '../../firebase'
 import { useAuth } from '../../hooks/useAuth'
-import { useTheme } from '../../context/ThemeContext'
-import { SunIcon, MoonIcon } from '@heroicons/react/24/outline'
 
 export default function Login() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const navigate = useNavigate()
   const { user } = useAuth()
-  const { isDark, toggleTheme } = useTheme()
 
   if (user) {
     navigate('/dashboard', { replace: true })
@@ -79,60 +74,57 @@ export default function Login() {
   }
 
   return (
-    <div className="min-h-screen bg-bg-base flex flex-col items-center justify-center px-4 relative transition-colors duration-300">
+    <div className="min-h-screen bg-bg-base relative overflow-hidden flex flex-col justify-between pt-16">
       
-      {/* Theme Toggle Button */}
-      <button 
-        onClick={toggleTheme}
-        className="absolute top-6 right-6 p-2 rounded-full bg-bg-elevated border border-bg-border text-text-secondary hover:text-accent hover:border-accent/50 transition-all shadow-sm"
-        aria-label="Toggle theme"
-      >
-        {isDark ? (
-          <SunIcon className="w-5 h-5" />
-        ) : (
-          <MoonIcon className="w-5 h-5" />
-        )}
-      </button>
+      {/* Neumorphic Diagonal Background */}
+      <div className="absolute inset-0 bg-neu-diagonal opacity-80 pointer-events-none" />
 
-      {/* Ambient glow */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-96 h-96 bg-accent/10 rounded-full blur-3xl" />
+      {/* Header Content (Dark top) */}
+      <div className="relative z-10 px-8 flex flex-col mt-10">
+        <div className="flex items-center gap-3 mb-10">
+          <div className="w-8 h-8 rounded-lg bg-accent flex items-center justify-center shadow-glow">
+            <span className="text-white text-sm font-bold">F</span>
+          </div>
+          <span className="text-white font-bold text-lg tracking-wide">Foobar 10.0</span>
+        </div>
+        
+        <h1 className="text-4xl font-extrabold text-white mb-3">Get Started now</h1>
+        <p className="text-sm text-text-secondary">
+          Create an account or log in to explore events and manage your dashboard
+        </p>
       </div>
 
-      {/* Card */}
-      <div className="relative w-full max-w-sm bg-bg-card border border-bg-border rounded-2xl px-8 py-10 flex flex-col items-center gap-7 shadow-glow">
-
-        {/* Logo */}
-        <div className="flex flex-col items-center gap-3">
-          <div className="w-14 h-14 rounded-2xl bg-accent flex items-center justify-center shadow-glow">
-            <span className="text-white text-xl font-bold tracking-tight">F</span>
+      {/* Bottom Sheet */}
+      <div className="relative z-10 w-full bg-bg-elevated rounded-t-[40px] px-8 pt-10 pb-12 shadow-[0_-10px_40px_rgba(0,0,0,0.3)] mt-8 flex-1 flex flex-col">
+        
+        {/* Fake Tabs */}
+        <div className="w-full h-12 bg-bg-card rounded-2xl flex p-1 mb-8 shadow-neu-in">
+          <div className="flex-1 bg-bg-elevated rounded-xl shadow-sm flex items-center justify-center text-sm font-bold text-text-primary">
+            Log In
           </div>
-          <div className="text-center">
-            <h1 className="text-2xl font-bold text-text-primary tracking-tight">Foobar 10.0</h1>
-            <p className="text-sm text-text-secondary mt-0.5">Event Management Platform</p>
+          <div className="flex-1 rounded-xl flex items-center justify-center text-sm font-semibold text-text-muted">
+            Sign Up
           </div>
         </div>
 
-        {/* Divider */}
-        <div className="w-full border-t border-bg-border" />
-
-        {/* Sign in */}
-        <div className="w-full flex flex-col items-center gap-4">
-          <p className="text-xs font-medium text-text-secondary tracking-wide uppercase">
-            Sign in to continue
-          </p>
+        <div className="flex-1 flex flex-col justify-end gap-5">
+          <div className="w-full relative flex items-center justify-center mb-2">
+            <div className="absolute inset-0 flex items-center">
+              <div className="w-full border-t border-bg-border"></div>
+            </div>
+            <div className="relative px-4 bg-bg-elevated text-xs text-text-muted font-medium">Or</div>
+          </div>
 
           <button
-            id="google-signin-btn"
             onClick={handleGoogleSignIn}
             disabled={loading}
-            className="w-full h-12 flex items-center justify-center gap-3 bg-bg-elevated border border-bg-border rounded-xl text-sm font-medium text-text-primary hover:border-accent/50 hover:bg-accent/5 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="w-full h-14 flex items-center justify-center gap-3 bg-bg-card rounded-2xl text-sm font-bold text-text-primary shadow-neu-out hover:bg-bg-card/90 transition-all active:shadow-neu-in"
           >
             {loading ? (
               <div className="w-5 h-5 border-2 border-text-muted border-t-accent rounded-full animate-spin" />
             ) : (
               <>
-                <svg className="w-5 h-5 shrink-0" viewBox="0 0 24 24">
+                <svg className="w-5 h-5" viewBox="0 0 24 24">
                   <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
                   <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
                   <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z"/>
@@ -142,21 +134,13 @@ export default function Login() {
               </>
             )}
           </button>
-
-          {error && (
-            <p className="text-xs text-danger text-center">{error}</p>
-          )}
+          
+          {error && <p className="text-xs text-danger text-center mt-2">{error}</p>}
         </div>
-
-        {/* Footer */}
-        <p className="text-xs text-text-muted text-center">
-          Use your college Google account to sign in
-        </p>
+        
+        {/* iOS Home Indicator fake */}
+        <div className="w-32 h-1.5 bg-bg-border rounded-full mx-auto mt-8 opacity-50" />
       </div>
-
-      <p className="mt-8 text-xs text-text-muted">
-        Foobar 10.0 — Powered by Firebase
-      </p>
     </div>
   )
 }

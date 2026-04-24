@@ -26,22 +26,22 @@
 
   /* OLED DARK THEME */
   .dark {
-    --color-bg-base: #000000;
-    --color-bg-card: #0d0d0d;
-    --color-bg-elevated: #141414;
-    --color-bg-border: #1e1e1e;
+    --color-bg-base: #222834;
+    --color-bg-card: #242C3B;
+    --color-bg-elevated: #353F54;
+    --color-bg-border: #444E66;
     
-    --color-accent: #6366f1;
-    --color-accent-light: #818cf8;
-    --color-accent-dim: rgba(99, 102, 241, 0.15);
-    --color-accent-glow: rgba(99, 102, 241, 0.35);
+    --color-accent: #4B4CED;
+    --color-accent-light: #37B6E9;
+    --color-accent-dim: rgba(75, 76, 237, 0.15);
+    --color-accent-glow: rgba(75, 76, 237, 0.35);
     
-    --color-text-primary: #f1f5f9;
-    --color-text-secondary: #94a3b8;
-    --color-text-muted: #475569;
+    --color-text-primary: #ffffff;
+    --color-text-secondary: #a0aec0;
+    --color-text-muted: #718096;
     
-    --color-success: #10b981;
-    --color-warning: #f59e0b;
+    --color-success: #38bdf8;
+    --color-warning: #facc15;
     --color-danger: #ef4444;
   }
 }

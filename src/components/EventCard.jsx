@@ -44,16 +44,16 @@ export default function EventCard({
 
   return (
     <div
-      className="bg-bg-card border border-bg-border rounded-2xl overflow-hidden transition-all duration-200 hover:shadow-lg hover:border-accent/20 cursor-pointer group"
+      className="bg-bg-elevated rounded-[32px] p-4 flex flex-col gap-4 shadow-neu-out transition-all duration-300 active:shadow-neu-in cursor-pointer group mb-4"
       onClick={() => navigate(`/event/${event.eventId || event.id}`)}
     >
       {/* Poster */}
-      <div className="relative h-44 overflow-hidden">
+      <div className="relative h-48 w-full rounded-2xl overflow-hidden shadow-inner">
         {event.posterURL ? (
           <img
             src={event.posterURL}
             alt={event.name}
-            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
           />
         ) : (
           <div className={`w-full h-full bg-gradient-to-br ${getGradient(event.eventId || event.id)} flex items-center justify-center`}>
@@ -87,14 +87,14 @@ export default function EventCard({
       </div>
 
       {/* Content */}
-      <div className="p-4 flex flex-col gap-3">
-        <h3 className="text-base font-semibold text-text-primary line-clamp-1">
+      <div className="flex flex-col gap-2 px-1">
+        <h3 className="text-lg font-bold text-white line-clamp-1 tracking-wide">
           {event.name}
         </h3>
 
-        <div className="flex flex-col gap-1.5">
-          <div className="flex items-center gap-2 text-text-secondary text-xs">
-            <CalendarIcon className="w-3.5 h-3.5 text-accent shrink-0" />
+        <div className="flex flex-col gap-1">
+          <div className="flex items-center gap-2 text-text-secondary text-xs font-medium">
+            <CalendarIcon className="w-4 h-4 text-accent shrink-0" />
             <span>{formatDateTime(event.dateTime)}</span>
           </div>
           <div className="flex items-center gap-2 text-text-secondary text-xs">
@@ -118,10 +118,10 @@ export default function EventCard({
             }
           }}
           disabled={registering}
-          className={`w-full h-11 rounded-xl text-sm font-semibold transition-all duration-200 flex items-center justify-center gap-2
+          className={`w-full h-12 mt-2 rounded-2xl text-sm font-bold tracking-wide transition-all duration-300 flex items-center justify-center gap-2 shadow-neu-out active:shadow-neu-in
             ${(isRegistered || isWaitlisted)
-              ? 'bg-bg-elevated text-text-primary border border-bg-border hover:bg-red-500/10 hover:text-danger hover:border-danger/20'
-              : 'bg-accent text-white hover:bg-accent-light shadow-glow-sm hover:shadow-glow'
+              ? 'bg-bg-card text-text-primary hover:text-danger border border-white/5'
+              : 'bg-gradient-to-r from-accent to-accent-light text-white shadow-glow hover:shadow-glow-sm border border-white/10'
             }
             disabled:opacity-70 group/btn`}
         >
