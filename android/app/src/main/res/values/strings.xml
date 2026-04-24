@@ -4,4 +4,5 @@
     <string name="title_activity_main">Event Fest</string>
     <string name="package_name">com.foobar10.app</string>
     <string name="custom_url_scheme">com.foobar10.app</string>
+    <string name="server_client_id">101858911871-nngicql2os8261mgf6vpk8jtiefg5l3e.apps.googleusercontent.com</string>
 </resources>

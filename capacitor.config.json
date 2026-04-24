@@ -1,5 +1,12 @@
 {
   "appId": "com.foobar10.app",
   "appName": "Event Fest",
-  "webDir": "dist"
+  "webDir": "dist",
+  "plugins": {
+    "GoogleAuth": {
+      "scopes": ["profile", "email"],
+      "serverClientId": "101858911871-nngicql2os8261mgf6vpk8jtiefg5l3e.apps.googleusercontent.com",
+      "forceCodeForRefreshToken": true
+    }
+  }
 }

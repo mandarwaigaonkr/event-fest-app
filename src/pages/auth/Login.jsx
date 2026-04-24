@@ -3,7 +3,9 @@
 
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { signInWithPopup } from 'firebase/auth'
+import { signInWithPopup, signInWithCredential, GoogleAuthProvider } from 'firebase/auth'
+import { Capacitor } from '@capacitor/core'
+import { GoogleAuth } from '@codetrix-studio/capacitor-google-auth'
 import { doc, getDoc, setDoc, serverTimestamp } from 'firebase/firestore'
 import { auth, db, googleProvider } from '../../firebase'
 import { useAuth } from '../../hooks/useAuth'
@@ -22,12 +24,30 @@ export default function Login() {
     return null
   }
 
+  useState(() => {
+    if (Capacitor.isNativePlatform()) {
+      GoogleAuth.initialize({
+        clientId: '101858911871-nngicql2os8261mgf6vpk8jtiefg5l3e.apps.googleusercontent.com',
+        scopes: ['profile', 'email'],
+        grantOfflineAccess: true,
+      })
+    }
+  }, [])
+
   async function handleGoogleSignIn() {
     setLoading(true)
     setError('')
     try {
-      const result = await signInWithPopup(auth, googleProvider)
-      const firebaseUser = result.user
+      let firebaseUser;
+      if (Capacitor.isNativePlatform()) {
+        const googleUser = await GoogleAuth.signIn()
+        const credential = GoogleAuthProvider.credential(googleUser.authentication.idToken)
+        const result = await signInWithCredential(auth, credential)
+        firebaseUser = result.user
+      } else {
+        const result = await signInWithPopup(auth, googleProvider)
+        firebaseUser = result.user
+      }
 
       const userRef = doc(db, 'users', firebaseUser.uid)
       const userSnap = await getDoc(userRef)

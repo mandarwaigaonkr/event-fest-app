@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "101858911871",
+    "project_id": "foobar-10-6c7e7",
+    "storage_bucket": "foobar-10-6c7e7.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:101858911871:android:4e291cff9be1152406c14a",
+        "android_client_info": {
+          "package_name": "com.foobar10.app"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "101858911871-nngicql2os8261mgf6vpk8jtiefg5l3e.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyD5lPnlQ9wXc4OR_-mN46e1E3sQaEYwrz4"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "101858911871-nngicql2os8261mgf6vpk8jtiefg5l3e.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
