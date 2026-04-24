@@ -23,8 +23,8 @@ service cloud.firestore {
     match /events/{eventId} {
       allow read: if isSignedIn();
       allow create, delete: if isAdmin();
-      // Allow admins full update, allow users to update ONLY the registeredCount
-      allow update: if isAdmin() || (isSignedIn() && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['registeredCount']));
+      // Allow admins full update, allow users to update ONLY registeredCount and waitlistCount
+      allow update: if isAdmin() || (isSignedIn() && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['registeredCount', 'waitlistCount']));
 
       match /registrations/{uid} {
         allow read: if isOwner(uid) || isAdmin();

@@ -14,6 +14,7 @@ import {
   serverTimestamp,
   where,
   getDocs,
+  limit,
 } from 'firebase/firestore'
 import { db } from '../firebase'
 import { useAuth } from './useAuth'
@@ -175,6 +176,17 @@ export async function unregisterFromEvent(eventId, userId) {
   const regRef = doc(db, 'events', eventId, 'registrations', userId)
 
   try {
+    // 1. Fetch next in line (outside of transaction)
+    const regsQuery = query(
+      collection(db, 'events', eventId, 'registrations'),
+      where('status', '==', 'waitlisted'),
+      orderBy('registeredAt', 'asc'),
+      limit(1)
+    )
+    const snap = await getDocs(regsQuery)
+    const nextInLineDoc = snap.empty ? null : snap.docs[0]
+
+    // 2. Run the atomic transaction
     await runTransaction(db, async (transaction) => {
       const eventDoc = await transaction.get(eventRef)
       if (!eventDoc.exists()) {
@@ -203,35 +215,19 @@ export async function unregisterFromEvent(eventId, userId) {
         let newWaitlistCount = eventData.waitlistCount || 0
 
         // Check if there are waitlisted users to promote
-        if (newWaitlistCount > 0) {
-          // Fetch all registrations to find the next in line
-          const regsQuery = query(collection(db, 'events', eventId, 'registrations'))
-          const regsSnap = await transaction.get(regsQuery)
-          
-          const waitlistedUsers = []
-          regsSnap.forEach(doc => {
-            const data = doc.data()
-            if (data.status === 'waitlisted' && doc.id !== userId) {
-              waitlistedUsers.push({ id: doc.id, ...data })
-            }
-          })
-
-          if (waitlistedUsers.length > 0) {
-            // Sort by registeredAt (oldest first)
-            waitlistedUsers.sort((a, b) => a.registeredAt.toMillis() - b.registeredAt.toMillis())
-            const nextInLine = waitlistedUsers[0]
-
-            // Promote them
-            const nextRef = doc(db, 'events', eventId, 'registrations', nextInLine.id)
-            transaction.update(nextRef, {
-              status: 'registered'
-            })
-
-            newRegisteredCount += 1
-            newWaitlistCount = Math.max(0, newWaitlistCount - 1)
+        if (newWaitlistCount > 0 && nextInLineDoc && nextInLineDoc.id !== userId) {
+            const nextRef = doc(db, 'events', eventId, 'registrations', nextInLineDoc.id)
+            const nextActualDoc = await transaction.get(nextRef)
             
-            // Note: In a real app, send push notification/email to nextInLine here
-          }
+            // Verify they are still waitlisted
+            if (nextActualDoc.exists() && nextActualDoc.data().status === 'waitlisted') {
+              transaction.update(nextRef, {
+                status: 'registered'
+              })
+
+              newRegisteredCount += 1
+              newWaitlistCount = Math.max(0, newWaitlistCount - 1)
+            }
         }
 
         // Update event counts
