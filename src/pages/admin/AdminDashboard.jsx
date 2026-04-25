@@ -31,7 +31,7 @@ export default function AdminDashboard() {
     try {
       await updateDoc(doc(db, 'events', event.id), { status: newStatus })
       toast.success(`Event ${newStatus === 'active' ? 'activated' : 'cancelled'}`)
-    } catch (err) {
+    } catch {
       toast.error('Failed to update event status')
     }
   }

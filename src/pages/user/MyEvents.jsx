@@ -52,7 +52,7 @@ export default function MyEvents() {
       <div className="sticky top-0 z-40 bg-bg-base/95 backdrop-blur-md border-b border-bg-border">
         <div className="max-w-lg mx-auto px-4 pt-5 pb-3">
           <h1 className="text-lg font-semibold text-text-primary">My Events</h1>
-          <p className="text-xs text-text-muted mt-0.5">Events you've registered for</p>
+          <p className="text-xs text-text-muted mt-0.5">Events you&apos;ve registered for</p>
         </div>
       </div>
 

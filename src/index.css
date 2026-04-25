@@ -61,21 +61,21 @@ body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   
-  /* Mobile app scrolling fixes */
+  min-height: 100dvh;
   overscroll-behavior-y: none;
   -webkit-tap-highlight-color: transparent;
-  -webkit-touch-callout: none;
-  -webkit-user-select: none;
-  user-select: none;
 }
 
 html {
+  background-color: var(--color-bg-base);
   overscroll-behavior-y: none;
   scroll-behavior: smooth;
 }
 
-/* Allow text selection in inputs */
-input, textarea {
+input,
+select,
+textarea {
+  font-size: 16px;
   -webkit-user-select: auto;
   user-select: auto;
 }
@@ -95,6 +95,11 @@ input, textarea {
 
 .safe-area-bottom {
   padding-bottom: env(safe-area-inset-bottom, 8px);
+}
+
+.py-safe {
+  padding-top: max(env(safe-area-inset-top), 2.5rem);
+  padding-bottom: max(env(safe-area-inset-bottom), 2.5rem);
 }
 
 .line-clamp-1 {

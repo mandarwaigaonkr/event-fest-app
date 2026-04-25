@@ -176,7 +176,7 @@ export default function Dashboard() {
                     </div>
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-semibold text-text-primary">
-                        Team Invite: "{invite.name}"
+                        Team Invite: &quot;{invite.name}&quot;
                       </p>
                       <p className="text-xs text-text-secondary mt-0.5">
                         <span className="font-medium">{leaderName}</span> invited you to join for <span className="font-medium">{eventName}</span>

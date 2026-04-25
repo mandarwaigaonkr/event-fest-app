@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-labelledby="title">
+  <title>Foobar 10</title>
+  <rect width="512" height="512" rx="112" fill="#09090B"/>
+  <path fill="#7C3AED" d="M104 144c0-22.1 17.9-40 40-40h224c22.1 0 40 17.9 40 40v224c0 22.1-17.9 40-40 40H144c-22.1 0-40-17.9-40-40V144Z"/>
+  <path fill="#FFFFFF" d="M180 344V168h152v42h-99v32h86v41h-86v61h-53Z"/>
+  <circle cx="352" cy="344" r="28" fill="#FFFFFF"/>
+</svg>

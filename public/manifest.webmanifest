@@ -1,0 +1,20 @@
+{
+  "name": "Foobar 10.0 Event Platform",
+  "short_name": "Foobar 10",
+  "description": "Mobile-first campus event registration and management.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#09090B",
+  "theme_color": "#7C3AED",
+  "orientation": "portrait",
+  "categories": ["education", "productivity"],
+  "icons": [
+    {
+      "src": "/icons/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

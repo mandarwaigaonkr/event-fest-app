@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react'
 import { collection, query, where, getDocs } from 'firebase/firestore'
 import { db } from '../firebase'
-import toast from 'react-hot-toast'
 import { XMarkIcon, PlusIcon, TrashIcon } from '@heroicons/react/24/outline'
 import { createTeamRegistration } from '../hooks/useEvents'
 

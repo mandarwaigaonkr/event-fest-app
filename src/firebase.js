@@ -1,6 +1,6 @@
-// src/firebase.js — Firebase initialization (Foobar 10.0)
+// src/firebase.js - Firebase initialization for the web app
 import { initializeApp } from 'firebase/app'
-import { getAuth, GoogleAuthProvider } from 'firebase/auth'
+import { browserLocalPersistence, getAuth, GoogleAuthProvider, setPersistence } from 'firebase/auth'
 import { getFirestore } from 'firebase/firestore'
 import { getStorage } from 'firebase/storage'
 
@@ -16,6 +16,10 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig)
 
 export const auth = getAuth(app)
+setPersistence(auth, browserLocalPersistence).catch((err) => {
+  console.error('Firebase auth persistence failed:', err)
+})
+
 export const db = getFirestore(app)
 export const storage = getStorage(app)
 export const googleProvider = new GoogleAuthProvider()

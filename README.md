@@ -1,53 +1,46 @@
-# Foobar 10.0 — Event Management Platform 🚀
+# Foobar 10.0 - Event Management Platform
 
-A modern, high-performance event management platform built for college fests and technical events. Built with React, Vite, TailwindCSS, and Firebase, this platform handles seamless user registration, atomic waitlist processing, and robust admin attendance tools.
+A mobile-first web app for college event discovery, registration, waitlists, team invites, attendance, and admin management.
 
-## ✨ Key Features
+## Current Direction
 
-### For Users
-* **Dynamic Event Discovery**: Browse beautiful event cards with glassmorphic UI and real-time capacity tracking.
-* **Smart Registrations & Waitlisting**: If an event is full, instantly join the waitlist. If a spot opens up, the system automatically promotes the oldest waitlisted user to registered status.
-* **Dual Dashboard**: Track upcoming events and view past attended events with one click.
-* **Theme Switching**: Fully customized Dark Mode and Light Mode with seamless transitions.
-* **Profile Management**: Displays onboarding details (Registration Number, Class, Department).
+This project is now web-first. Capacitor and the checked-in Android shell have been removed so development and testing can happen through normal web deployment instead of repeated APK builds.
 
-### For Admins
-* **Full Event Lifecycle**: Create, edit, and manage event details, capacities, and venues.
-* **Take Attendance**: A dedicated, real-time bulk-attendance marking system with "Review & Submit" absentee warnings.
-* **Data Export**: One-click download of filtered CSV files containing participant details (e.g., download a sheet of all "Present" attendees).
-* **Participant Management**: Remove registrations or manually intervene directly from the dashboard.
+The app is also PWA-ready with a manifest and a conservative service worker. It can be installed from supported mobile browsers, while core data flows still rely on live Firebase connectivity.
 
-## 🛠 Tech Stack
+## Tech Stack
 
-* **Frontend**: React (Vite), TailwindCSS, HeroIcons
-* **Backend**: Firebase (Auth & Firestore)
-* **Mobile**: Capacitor (Native Android)
-* **CI/CD**: GitHub Actions (Cloud APK Building)
+- React + Vite
+- Tailwind CSS
+- Firebase Auth
+- Firestore real-time data
+- Firebase Storage initialized for future poster/media uploads
+- Firebase Cloud Functions scaffolded but not yet implemented
 
-## 📦 Mobile App (APK) Auto-Build
+## Features
 
-We have configured a continuous integration pipeline using **GitHub Actions**. You do *not* need Android Studio installed locally!
+- Google sign-in through Firebase Auth for web
+- User onboarding with registration number, class, and department
+- Real-time event dashboard
+- Individual and team event registration
+- Waitlist support
+- Team invites and invite responses
+- User profile and registered events
+- Admin event creation and editing
+- Participant management
+- Attendance marking
+- CSV export
 
-1. Push your code to the `main` branch.
-2. Go to the **Actions** tab in your GitHub repository.
-3. Click the completed **"Build Android APK"** workflow.
-4. Scroll to the bottom and download the **`Foobar10-App-Debug.zip`** artifact to get your fresh `.apk` file!
+## Local Development
 
-## 🚀 Local Development Setup
+1. Install dependencies:
 
-1. **Clone the repository:**
-   ```bash
-   git clone https://github.com/yourusername/event-fest-app.git
-   cd event-fest-app
-   ```
-
-2. **Install dependencies:**
    ```bash
    npm install
    ```
 
-3. **Firebase Configuration:**
-   Create a `.env` file in the root directory and add your Firebase credentials:
+2. Create a `.env` file in the project root:
+
    ```env
    VITE_FIREBASE_API_KEY=your_api_key
    VITE_FIREBASE_AUTH_DOMAIN=your_auth_domain
@@ -57,22 +50,62 @@ We have configured a continuous integration pipeline using **GitHub Actions**. Y
    VITE_FIREBASE_APP_ID=your_app_id
    ```
 
-4. **Run the development server:**
+3. Start the dev server:
+
    ```bash
    npm run dev
    ```
 
-5. **Build for production:**
+4. Build for production:
+
    ```bash
    npm run build
    ```
 
-## 🔐 Admin Configuration
+5. Preview the production build:
 
-By default, all new users are created as standard participants. To grant Admin privileges:
-1. Open the Firebase Console.
-2. Navigate to **Firestore Database** > `users` collection.
-3. Find the desired user document and change their `role` field from `"user"` to `"admin"`.
+   ```bash
+   npm run preview
+   ```
 
----
-*Built for the next generation of college fests.*
+## Firebase Setup Notes
+
+- Add your deployed web domain to Firebase Auth authorized domains.
+- Enable the Google provider in Firebase Auth.
+- Deploy `firestore.rules` before using the optimized collection group registration listener.
+- Firestore is the source of truth for live app state; the service worker only caches the app shell and static assets.
+
+## Deployment
+
+Any static hosting that supports Vite SPAs works. Firebase Hosting, Vercel, Netlify, and Cloudflare Pages are all suitable.
+
+For BrowserRouter routes such as `/dashboard` or `/admin`, configure the host to rewrite all app routes to `index.html`.
+
+Firebase Hosting example:
+
+```json
+{
+  "hosting": {
+    "public": "dist",
+    "rewrites": [
+      { "source": "**", "destination": "/index.html" }
+    ]
+  }
+}
+```
+
+## Admin Configuration
+
+New users are created as standard participants. To grant admin access, update the user document in Firestore:
+
+- Collection: `users`
+- Document: the user's Firebase UID
+- Field: `role`
+- Value: `admin`
+
+## Future Native Options
+
+If app store distribution becomes necessary later, keep this web app as the primary product and wrap it as a distribution layer:
+
+- Android: Trusted Web Activity or a fresh Capacitor shell
+- iOS: PWA install path first, native wrapper only if App Store distribution is required

@@ -10,7 +10,6 @@ import {
   getDocs,
   updateDoc,
   deleteDoc,
-  serverTimestamp,
 } from 'firebase/firestore'
 import { db } from '../../firebase'
 import Navbar from '../../components/Navbar'
@@ -102,7 +101,6 @@ export default function EventParticipants() {
       )
     })
 
-  const bannedCount = participants.filter(p => p.banned).length
   const presentCount = participants.filter(p => !p.banned && p.attendance === 'present').length
   const absentCount = participants.filter(p => !p.banned && p.attendance === 'absent').length
 
@@ -136,7 +134,7 @@ export default function EventParticipants() {
         await deleteDoc(doc(db, 'events', eventId, 'teams', team.id))
         toast.success(`Team "${team.name}" has been deleted`)
       }
-    } catch (err) {
+    } catch {
       toast.error('Action failed')
     }
     setActionModal(null)

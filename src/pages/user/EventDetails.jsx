@@ -3,7 +3,7 @@
 
 import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { doc, onSnapshot, getDoc, collection, query, where } from 'firebase/firestore'
+import { doc, onSnapshot, collection, query, where } from 'firebase/firestore'
 import { db } from '../../firebase'
 import { useAuth } from '../../hooks/useAuth'
 import { registerForEvent, unregisterFromEvent, respondToTeamInvite } from '../../hooks/useEvents'
@@ -61,9 +61,8 @@ export default function EventDetails() {
   useEffect(() => {
     if (!eventId || !user) return
 
-    async function checkReg() {
-      const regRef = doc(db, 'events', eventId, 'registrations', user.uid)
-      const snap = await getDoc(regRef)
+    const regRef = doc(db, 'events', eventId, 'registrations', user.uid)
+    const unsub = onSnapshot(regRef, (snap) => {
       if (snap.exists() && !snap.data().banned) {
         if (snap.data().status === 'waitlisted') {
           setIsRegistered(false)
@@ -76,9 +75,10 @@ export default function EventDetails() {
         setIsRegistered(false)
         setIsWaitlisted(false)
       }
-    }
-    checkReg()
-  }, [eventId, user, event?.registeredCount])
+    })
+
+    return unsub
+  }, [eventId, user])
 
   // Check for pending team invites
   useEffect(() => {
@@ -198,7 +198,7 @@ export default function EventDetails() {
           <div className="bg-accent text-white rounded-2xl p-4 shadow-xl mb-4 animate-fade-up border border-accent-light">
             <h3 className="font-bold text-base mb-1">Team Invitation</h3>
             <p className="text-sm text-white/90 mb-4">
-              <span className="font-semibold">{pendingInvite.members.find(m=>m.uid===pendingInvite.leaderUid)?.name || 'Someone'}</span> invited you to join team <span className="font-bold">"{pendingInvite.name}"</span>.
+              <span className="font-semibold">{pendingInvite.members.find(m=>m.uid===pendingInvite.leaderUid)?.name || 'Someone'}</span> invited you to join team <span className="font-bold">&quot;{pendingInvite.name}&quot;</span>.
             </p>
             <div className="flex gap-2">
               <button 

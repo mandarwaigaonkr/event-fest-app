@@ -9,7 +9,7 @@ import Navbar from '../../components/Navbar'
 import ConfirmModal from '../../components/ConfirmModal'
 import LoadingSpinner from '../../components/LoadingSpinner'
 import toast from 'react-hot-toast'
-import { ArrowLeftIcon, TrashIcon, PhotoIcon } from '@heroicons/react/24/outline'
+import { ArrowLeftIcon, TrashIcon } from '@heroicons/react/24/outline'
 
 export default function EditEvent() {
   const { eventId } = useParams()

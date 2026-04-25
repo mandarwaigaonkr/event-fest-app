@@ -1,80 +1,124 @@
 // src/pages/auth/Login.jsx
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { signInWithPopup, signInWithCredential, GoogleAuthProvider } from 'firebase/auth'
-import { Capacitor } from '@capacitor/core'
-import { GoogleAuth } from '@codetrix-studio/capacitor-google-auth'
+import {
+  getRedirectResult,
+  signInWithPopup,
+  signInWithRedirect,
+} from 'firebase/auth'
 import { doc, getDoc, setDoc, serverTimestamp } from 'firebase/firestore'
 import { auth, db, googleProvider } from '../../firebase'
 import { useAuth } from '../../hooks/useAuth'
+
+function authErrorMessage(code) {
+  switch (code) {
+    case 'auth/popup-closed-by-user':
+      return 'Sign-in was cancelled.'
+    case 'auth/popup-blocked':
+      return 'Popup was blocked. Redirecting to Google sign-in...'
+    case 'auth/unauthorized-domain':
+      return 'This domain is not authorized in Firebase Auth.'
+    default:
+      return 'Sign-in failed. Please try again.'
+  }
+}
+
+function shouldUseRedirectSignIn() {
+  return window.matchMedia('(max-width: 768px)').matches ||
+    window.matchMedia('(display-mode: standalone)').matches ||
+    window.navigator.standalone === true
+}
+
+async function ensureUserProfile(firebaseUser, navigate) {
+  const userRef = doc(db, 'users', firebaseUser.uid)
+  const userSnap = await getDoc(userRef)
+
+  if (!userSnap.exists()) {
+    await setDoc(userRef, {
+      uid: firebaseUser.uid,
+      name: firebaseUser.displayName,
+      email: firebaseUser.email,
+      photoURL: firebaseUser.photoURL,
+      role: 'user',
+      onboarded: false,
+      createdAt: serverTimestamp(),
+      updatedAt: serverTimestamp(),
+    })
+    navigate('/onboarding', { replace: true })
+    return
+  }
+
+  const data = userSnap.data()
+  if (!data.onboarded) navigate('/onboarding', { replace: true })
+  else if (data.role === 'admin') navigate('/admin', { replace: true })
+  else navigate('/dashboard', { replace: true })
+}
 
 export default function Login() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const navigate = useNavigate()
-  const { user } = useAuth()
+  const { user, profile, loading: authLoading, isAdmin, isOnboarded } = useAuth()
 
-  if (user) {
-    navigate('/dashboard', { replace: true })
-    return null
-  }
+  useEffect(() => {
+    if (authLoading || !user || !profile) return
+    if (!isOnboarded) navigate('/onboarding', { replace: true })
+    else if (isAdmin) navigate('/admin', { replace: true })
+    else navigate('/dashboard', { replace: true })
+  }, [authLoading, user, profile, isAdmin, isOnboarded, navigate])
 
-  useState(() => {
-    if (Capacitor.isNativePlatform()) {
-      GoogleAuth.initialize({
-        clientId: '101858911871-nngicql2os8261mgf6vpk8jtiefg5l3e.apps.googleusercontent.com',
-        scopes: ['profile', 'email'],
-        grantOfflineAccess: true,
-      })
+  useEffect(() => {
+    let mounted = true
+
+    async function finishRedirectSignIn() {
+      try {
+        const result = await getRedirectResult(auth)
+        if (!result || !mounted) return
+        await ensureUserProfile(result.user, navigate)
+      } catch (err) {
+        console.error(err)
+        if (mounted) setError(authErrorMessage(err.code))
+      }
     }
-  }, [])
+
+    finishRedirectSignIn()
+    return () => {
+      mounted = false
+    }
+  }, [navigate])
 
   async function handleGoogleSignIn() {
     setLoading(true)
     setError('')
     try {
-      let firebaseUser;
-      if (Capacitor.isNativePlatform()) {
-        const googleUser = await GoogleAuth.signIn()
-        const credential = GoogleAuthProvider.credential(googleUser.authentication.idToken)
-        const result = await signInWithCredential(auth, credential)
-        firebaseUser = result.user
-      } else {
-        const result = await signInWithPopup(auth, googleProvider)
-        firebaseUser = result.user
+      if (shouldUseRedirectSignIn()) {
+        await signInWithRedirect(auth, googleProvider)
+        return
       }
 
-      const userRef = doc(db, 'users', firebaseUser.uid)
-      const userSnap = await getDoc(userRef)
-
-      if (!userSnap.exists()) {
-        await setDoc(userRef, {
-          uid: firebaseUser.uid,
-          name: firebaseUser.displayName,
-          email: firebaseUser.email,
-          photoURL: firebaseUser.photoURL,
-          role: 'user',
-          onboarded: false,
-          createdAt: serverTimestamp(),
-          updatedAt: serverTimestamp(),
-        })
-        navigate('/onboarding', { replace: true })
-      } else {
-        const data = userSnap.data()
-        if (!data.onboarded) navigate('/onboarding', { replace: true })
-        else if (data.role === 'admin') navigate('/admin', { replace: true })
-        else navigate('/dashboard', { replace: true })
-      }
+      const result = await signInWithPopup(auth, googleProvider)
+      await ensureUserProfile(result.user, navigate)
     } catch (err) {
       console.error(err)
-      setError('Sign-in failed. Please try again.')
+      setError(authErrorMessage(err.code))
+      if (err.code === 'auth/popup-blocked' || err.code === 'auth/cancelled-popup-request') {
+        await signInWithRedirect(auth, googleProvider)
+      }
     } finally {
       setLoading(false)
     }
   }
 
+  if (authLoading || (user && profile)) {
+    return (
+      <div className="min-h-screen bg-bg-base flex items-center justify-center px-6">
+        <div className="w-8 h-8 border-2 border-text-muted border-t-accent rounded-full animate-spin" />
+      </div>
+    )
+  }
+
   return (
-    <div className="min-h-screen bg-bg-base flex flex-col items-center justify-center px-6">
+    <div className="min-h-screen bg-bg-base flex flex-col items-center justify-center px-6 py-safe">
       <div className="w-full max-w-sm flex flex-col items-center animate-fade-up">
         
         {/* Logo mark */}

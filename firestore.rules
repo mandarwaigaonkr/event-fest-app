@@ -126,5 +126,11 @@ service cloud.firestore {
     match /{path=**}/teams/{teamId} {
       allow read: if isAdmin() || (isSignedIn() && (request.auth.uid in resource.data.invitedUids || request.auth.uid in resource.data.memberUids));
     }
+
+    // Collection group rule for registrations — needed for user dashboards without
+    // reading every event document first.
+    match /{path=**}/registrations/{uid} {
+      allow read: if isAdmin() || (isSignedIn() && resource.data.uid == request.auth.uid);
+    }
   }
 }

@@ -3,7 +3,7 @@
 
 import { createContext, useContext, useEffect, useState } from 'react'
 import { onAuthStateChanged } from 'firebase/auth'
-import { doc, getDoc, onSnapshot } from 'firebase/firestore'
+import { doc, onSnapshot } from 'firebase/firestore'
 import { auth, db } from '../firebase'
 
 export const AuthContext = createContext(null)
@@ -23,6 +23,8 @@ export default function AuthProvider({ children }) {
     let unsubProfile = null
 
     const unsubAuth = onAuthStateChanged(auth, async (firebaseUser) => {
+      if (unsubProfile) unsubProfile()
+      unsubProfile = null
       setUser(firebaseUser)
 
       if (firebaseUser) {
@@ -34,7 +36,6 @@ export default function AuthProvider({ children }) {
         })
       } else {
         // Logged out — clean up
-        if (unsubProfile) unsubProfile()
         setProfile(null)
         setLoading(false)
       }
