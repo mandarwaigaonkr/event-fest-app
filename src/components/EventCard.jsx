@@ -43,7 +43,7 @@ export default function EventCard({
 
   return (
     <div
-      className="bg-bg-card border border-bg-border rounded-2xl overflow-hidden transition-all duration-150 hover:border-text-muted/20 cursor-pointer group"
+      className="bg-bg-card border border-bg-border rounded-2xl overflow-hidden hover:border-text-muted/20 cursor-pointer group interactive-card"
       onClick={() => navigate(`/event/${event.eventId || event.id}`)}
     >
       {/* Poster */}
@@ -124,7 +124,7 @@ export default function EventCard({
             }
           }}
           disabled={registering}
-          className={`w-full h-10 rounded-xl text-sm font-medium transition-all duration-150 flex items-center justify-center gap-2 active:scale-[0.98]
+          className={`w-full h-10 rounded-xl text-sm font-medium pressable flex items-center justify-center gap-2
             ${(isRegistered || isWaitlisted)
               ? 'bg-bg-elevated text-text-primary hover:text-danger'
               : 'bg-accent text-white hover:opacity-90'

@@ -75,7 +75,9 @@ export default function CreateEvent() {
         maxTeams: form.isTeamEvent ? parseInt(form.maxParticipants) : null,
         maxParticipants: form.isTeamEvent ? null : parseInt(form.maxParticipants),
         registeredCount: 0,
+        waitlistCount: 0,
         registeredTeamsCount: form.isTeamEvent ? 0 : null,
+        waitlistTeamsCount: form.isTeamEvent ? 0 : null,
         posterURL: '', // Storage not enabled yet
         status: 'active',
         createdBy: user.uid,
@@ -108,7 +110,7 @@ export default function CreateEvent() {
         <div className="max-w-lg mx-auto px-4 pt-4 pb-3 flex items-center gap-3">
           <button
             onClick={() => navigate(-1)}
-            className="p-2 -ml-2 rounded-xl hover:bg-bg-elevated transition-colors"
+            className="p-2 -ml-2 rounded-xl hover:bg-bg-elevated pressable"
           >
             <ArrowLeftIcon className="w-5 h-5 text-text-secondary" />
           </button>
@@ -117,7 +119,7 @@ export default function CreateEvent() {
       </div>
 
       <div className="max-w-lg mx-auto px-4 pt-5">
-        <form onSubmit={handleSubmit} className="flex flex-col gap-5">
+        <form onSubmit={handleSubmit} className="flex flex-col gap-5 animate-fade-up">
 
           {/* Event Name */}
           <div>
@@ -293,7 +295,7 @@ export default function CreateEvent() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full h-12 bg-accent text-white rounded-xl text-sm font-semibold hover:bg-accent-light shadow-glow-sm hover:shadow-glow transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 mb-4"
+            className="w-full h-12 bg-accent text-white rounded-xl text-sm font-semibold hover:bg-accent-light shadow-glow-sm hover:shadow-glow pressable disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 mb-4"
           >
             {loading ? (
               <>

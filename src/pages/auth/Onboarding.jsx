@@ -87,7 +87,7 @@ export default function Onboarding() {
         <div className="absolute top-1/3 left-1/2 -translate-x-1/2 w-80 h-80 bg-accent/10 rounded-full blur-3xl" />
       </div>
 
-      <div className="relative w-full max-w-sm bg-bg-card border border-bg-border rounded-2xl px-8 py-10 shadow-glow">
+      <div className="relative w-full max-w-sm bg-bg-card border border-bg-border rounded-2xl px-8 py-10 shadow-glow animate-scale-in">
 
         {/* Header */}
         <div className="mb-8">
@@ -178,7 +178,7 @@ export default function Onboarding() {
             id="onboarding-submit-btn"
             type="submit"
             disabled={loading}
-            className="w-full h-12 bg-accent text-white rounded-xl text-sm font-semibold hover:bg-accent-light transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed shadow-glow-sm hover:shadow-glow mt-2 flex items-center justify-center gap-2"
+            className="w-full h-12 bg-accent text-white rounded-xl text-sm font-semibold hover:bg-accent-light pressable disabled:opacity-50 disabled:cursor-not-allowed shadow-glow-sm hover:shadow-glow mt-2 flex items-center justify-center gap-2"
           >
             {loading ? (
               <>

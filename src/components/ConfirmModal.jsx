@@ -23,11 +23,11 @@ export default function ConfirmModal({
 
   return (
     <div 
-      className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center p-4 bg-black/50"
+      className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center p-4 bg-black/50 animate-fade-in"
       onClick={onCancel}
     >
       <div 
-        className="bg-bg-card border border-bg-border rounded-2xl w-full max-w-sm p-5 shadow-medium animate-fade-up flex flex-col max-h-[90vh]"
+        className="bg-bg-card border border-bg-border rounded-2xl w-full max-w-sm p-5 shadow-medium animate-scale-in flex flex-col max-h-[90vh]"
         onClick={(e) => e.stopPropagation()}
       >
         <h3 className="text-base font-semibold text-text-primary mb-1.5 shrink-0">{title}</h3>
@@ -36,13 +36,13 @@ export default function ConfirmModal({
         <div className="flex gap-2.5 shrink-0 mt-auto">
           <button
             onClick={onCancel}
-            className="flex-1 py-2.5 rounded-xl bg-bg-elevated text-sm font-medium text-text-primary hover:bg-bg-border/50 transition-colors"
+            className="flex-1 py-2.5 rounded-xl bg-bg-elevated text-sm font-medium text-text-primary hover:bg-bg-border/50 pressable"
           >
             Cancel
           </button>
           <button
             onClick={onConfirm}
-            className={`flex-1 py-2.5 rounded-xl text-sm font-medium text-white transition-all active:scale-[0.97] ${
+            className={`flex-1 py-2.5 rounded-xl text-sm font-medium text-white pressable ${
               isDestructive 
                 ? 'bg-danger hover:bg-red-500' 
                 : 'bg-accent hover:opacity-90'

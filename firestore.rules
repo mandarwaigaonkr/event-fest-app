@@ -12,11 +12,76 @@ service cloud.firestore {
     function isOwner(uid) {
       return isSignedIn() && request.auth.uid == uid;
     }
+    function isSafeUserCreate(uid) {
+      return isOwner(uid) &&
+        request.resource.data.uid == uid &&
+        request.resource.data.role == 'user';
+    }
+    function isSafeUserUpdate(uid) {
+      return isOwner(uid) &&
+        request.resource.data.uid == resource.data.uid &&
+        request.resource.data.role == resource.data.role;
+    }
+    function isSafeRegistrationCreate(uid) {
+      return isOwner(uid) &&
+        request.resource.data.uid == uid &&
+        request.resource.data.banned == false &&
+        request.resource.data.attendance == 'not_marked' &&
+        request.resource.data.status in ['registered', 'waitlisted'] &&
+        request.resource.data.keys().hasOnly([
+          'uid',
+          'name',
+          'email',
+          'regNumber',
+          'class',
+          'department',
+          'registeredAt',
+          'attendance',
+          'attendanceMarkedAt',
+          'banned',
+          'status',
+          'teamId'
+        ]);
+    }
+    function counterValue(field) {
+      return resource.data.keys().hasAny([field]) ? resource.data[field] : 0;
+    }
+    function isValidCounterStep(field) {
+      return !request.resource.data.diff(resource.data).affectedKeys().hasAny([field]) ||
+        (request.resource.data[field] is int &&
+         request.resource.data[field] >= 0 &&
+         (request.resource.data[field] == counterValue(field) + 1 ||
+          request.resource.data[field] == counterValue(field) - 1));
+    }
+    function isUserCounterUpdateOnly() {
+      return isSignedIn() &&
+        request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+          'registeredCount',
+          'waitlistCount',
+          'registeredTeamsCount',
+          'waitlistTeamsCount'
+        ]) &&
+        isValidCounterStep('registeredCount') &&
+        isValidCounterStep('waitlistCount') &&
+        isValidCounterStep('registeredTeamsCount') &&
+        isValidCounterStep('waitlistTeamsCount');
+    }
+    function canParticipateInTeamUpdate() {
+      return isSignedIn() &&
+        (request.auth.uid in resource.data.invitedUids ||
+         request.auth.uid in resource.data.memberUids) &&
+        request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+          'members',
+          'invitedUids',
+          'memberUids',
+          'status'
+        ]);
+    }
 
     match /users/{uid} {
       allow read: if isSignedIn();
-      allow create: if isOwner(uid);
-      allow update: if isOwner(uid) || isAdmin();
+      allow create: if isSafeUserCreate(uid);
+      allow update: if isAdmin() || isSafeUserUpdate(uid);
       allow delete: if isAdmin();
     }
 
@@ -24,11 +89,11 @@ service cloud.firestore {
       allow read: if isSignedIn();
       allow create, delete: if isAdmin();
       // Allow admins full update, allow users to update ONLY registeredCount, waitlistCount, registeredTeamsCount, waitlistTeamsCount
-      allow update: if isAdmin() || (isSignedIn() && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['registeredCount', 'waitlistCount', 'registeredTeamsCount', 'waitlistTeamsCount']));
+      allow update: if isAdmin() || isUserCounterUpdateOnly();
 
       match /registrations/{uid} {
         allow read: if isOwner(uid) || isAdmin();
-        allow create: if isOwner(uid);
+        allow create: if isSafeRegistrationCreate(uid);
         allow update: if isAdmin();
         allow delete: if isOwner(uid) || isAdmin();
       }
@@ -37,7 +102,7 @@ service cloud.firestore {
         allow read: if isAdmin() || (isSignedIn() && (request.auth.uid in resource.data.invitedUids || request.auth.uid in resource.data.memberUids));
         allow create: if isSignedIn() && request.auth.uid == request.resource.data.leaderUid;
         // Allow invited users or existing members to update the team (e.g. accepting an invite)
-        allow update: if isAdmin() || (isSignedIn() && (request.auth.uid in resource.data.invitedUids || request.auth.uid in resource.data.memberUids));
+        allow update: if isAdmin() || canParticipateInTeamUpdate();
         allow delete: if isAdmin();
       }
     }

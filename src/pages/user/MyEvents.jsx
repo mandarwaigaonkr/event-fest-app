@@ -81,13 +81,13 @@ export default function MyEvents() {
             </p>
             <button
               onClick={() => navigate('/dashboard')}
-              className="px-4 py-2 bg-accent text-white text-sm font-medium rounded-xl hover:opacity-90 transition-opacity"
+              className="px-4 py-2 bg-accent text-white text-sm font-medium rounded-xl hover:opacity-90 pressable"
             >
               Browse Events
             </button>
           </div>
         ) : (
-          <div className="flex flex-col gap-3">
+          <div className="flex flex-col gap-3 stagger-list">
             <span className="text-xs text-text-muted font-medium uppercase tracking-wider">
               {registrations.length} event{registrations.length !== 1 ? 's' : ''}
             </span>
@@ -102,7 +102,7 @@ export default function MyEvents() {
                 <div
                   key={reg.eventId}
                   onClick={() => navigate(`/event/${reg.eventId}`)}
-                  className="bg-bg-card border border-bg-border rounded-2xl p-3 flex gap-3 items-start cursor-pointer hover:border-text-muted/20 transition-all group"
+                  className="bg-bg-card border border-bg-border rounded-2xl p-3 flex gap-3 items-start cursor-pointer hover:border-text-muted/20 interactive-card group"
                 >
                   <div className="w-16 h-16 rounded-xl overflow-hidden shrink-0">
                     {event?.posterURL ? (

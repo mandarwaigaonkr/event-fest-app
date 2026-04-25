@@ -111,7 +111,7 @@ export default function Dashboard() {
 
             <button
               onClick={toggleTheme}
-              className="w-9 h-9 rounded-xl bg-bg-elevated flex items-center justify-center text-text-muted hover:text-text-primary transition-colors"
+              className="w-9 h-9 rounded-xl bg-bg-elevated flex items-center justify-center text-text-muted hover:text-text-primary pressable"
               aria-label="Toggle theme"
             >
               {isDark ? <SunIcon className="w-4 h-4" /> : <MoonIcon className="w-4 h-4" />}
@@ -134,9 +134,9 @@ export default function Dashboard() {
           <div className="flex gap-1 bg-bg-elevated p-0.5 rounded-xl">
             <button
               onClick={() => setActiveTab('upcoming')}
-              className={`flex-1 py-1.5 text-xs font-medium rounded-lg transition-all duration-150 ${
+              className={`flex-1 py-1.5 text-xs font-medium rounded-lg pressable ${
                 activeTab === 'upcoming'
-                  ? 'bg-bg-card text-text-primary shadow-soft'
+                  ? 'bg-bg-card text-text-primary shadow-soft animate-scale-in'
                   : 'text-text-muted'
               }`}
             >
@@ -144,9 +144,9 @@ export default function Dashboard() {
             </button>
             <button
               onClick={() => setActiveTab('attended')}
-              className={`flex-1 py-1.5 text-xs font-medium rounded-lg transition-all duration-150 ${
+              className={`flex-1 py-1.5 text-xs font-medium rounded-lg pressable ${
                 activeTab === 'attended'
-                  ? 'bg-bg-card text-text-primary shadow-soft'
+                  ? 'bg-bg-card text-text-primary shadow-soft animate-scale-in'
                   : 'text-text-muted'
               }`}
             >
@@ -160,7 +160,7 @@ export default function Dashboard() {
       <div className="max-w-lg mx-auto px-4 pt-4">
         {/* Pending Team Invites */}
         {pendingInvites.length > 0 && (
-          <div className="flex flex-col gap-3 mb-4">
+          <div className="flex flex-col gap-3 mb-4 stagger-list">
             {pendingInvites.map(invite => {
               const leaderName = invite.members?.find(m => m.uid === invite.leaderUid)?.name || 'Someone'
               const eventName = events.find(e => e.id === invite.eventId)?.name || 'an event'
@@ -168,7 +168,7 @@ export default function Dashboard() {
                 <div
                   key={invite.id}
                   onClick={() => navigate(`/event/${invite.eventId}`)}
-                  className="bg-accent/10 border border-accent/20 rounded-2xl p-4 cursor-pointer hover:bg-accent/15 transition-colors animate-fade-up"
+                  className="bg-accent/10 border border-accent/20 rounded-2xl p-4 cursor-pointer hover:bg-accent/15 interactive-card"
                 >
                   <div className="flex items-start gap-3">
                     <div className="w-10 h-10 rounded-xl bg-accent/20 flex items-center justify-center shrink-0 mt-0.5">
@@ -190,7 +190,7 @@ export default function Dashboard() {
           </div>
         )}
         {loading ? (
-          <div className="flex flex-col gap-4">
+          <div className="flex flex-col gap-4 stagger-list">
             {[1, 2, 3].map(i => (
               <div key={i} className="bg-bg-card border border-bg-border rounded-2xl overflow-hidden animate-pulse">
                 <div className="h-44 bg-bg-elevated" />

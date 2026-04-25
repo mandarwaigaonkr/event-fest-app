@@ -112,10 +112,10 @@ export default function TeamRegistrationModal({ isOpen, onClose, event, currentU
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in">
-      <div className="bg-bg-card border border-bg-border rounded-2xl w-full max-w-md overflow-hidden shadow-2xl">
+      <div className="bg-bg-card border border-bg-border rounded-2xl w-full max-w-md overflow-hidden shadow-2xl animate-scale-in">
         <div className="p-4 border-b border-bg-border flex items-center justify-between">
           <h2 className="text-lg font-bold text-text-primary">Create a Team</h2>
-          <button onClick={onClose} className="p-1 rounded-lg hover:bg-bg-elevated transition-colors">
+          <button onClick={onClose} className="p-1 rounded-lg hover:bg-bg-elevated pressable">
             <XMarkIcon className="w-5 h-5 text-text-secondary" />
           </button>
         </div>
@@ -158,7 +158,7 @@ export default function TeamRegistrationModal({ isOpen, onClose, event, currentU
                     <button
                       type="button"
                       onClick={() => removeTeammateField(index)}
-                      className="w-12 h-12 flex items-center justify-center rounded-xl bg-bg-elevated border border-bg-border text-text-secondary hover:text-danger hover:border-danger/30 transition-colors"
+                      className="w-12 h-12 flex items-center justify-center rounded-xl bg-bg-elevated border border-bg-border text-text-secondary hover:text-danger hover:border-danger/30 pressable"
                     >
                       <TrashIcon className="w-5 h-5" />
                     </button>
@@ -171,7 +171,7 @@ export default function TeamRegistrationModal({ isOpen, onClose, event, currentU
               <button
                 type="button"
                 onClick={addTeammateField}
-                className="mt-3 flex items-center gap-2 text-sm font-medium text-accent hover:text-accent-light transition-colors"
+                className="mt-3 flex items-center gap-2 text-sm font-medium text-accent hover:text-accent-light pressable"
               >
                 <PlusIcon className="w-4 h-4" /> Add another teammate
               </button>
@@ -184,7 +184,7 @@ export default function TeamRegistrationModal({ isOpen, onClose, event, currentU
           <button
             type="submit"
             disabled={loading}
-            className="w-full h-12 mt-2 bg-accent text-white rounded-xl text-sm font-semibold hover:bg-accent-light shadow-glow-sm hover:shadow-glow transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+            className="w-full h-12 mt-2 bg-accent text-white rounded-xl text-sm font-semibold hover:bg-accent-light shadow-glow-sm hover:shadow-glow pressable disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
           >
             {loading ? (
               <>

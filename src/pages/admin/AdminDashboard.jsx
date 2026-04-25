@@ -53,7 +53,7 @@ export default function AdminDashboard() {
 
       <div className="max-w-lg mx-auto px-4 pt-4 space-y-5">
         {/* Quick Stats */}
-        <div className="grid grid-cols-3 gap-3">
+        <div className="grid grid-cols-3 gap-3 stagger-list">
           <div className="bg-bg-card border border-bg-border rounded-xl p-3 text-center">
             <CalendarDaysIcon className="w-5 h-5 mx-auto text-accent mb-1.5" />
             <p className="text-lg font-bold text-text-primary">{events.length}</p>
@@ -74,7 +74,7 @@ export default function AdminDashboard() {
         {/* Create Event CTA */}
         <button
           onClick={() => navigate('/admin/create-event')}
-          className="w-full h-12 flex items-center justify-center gap-2 bg-accent text-white rounded-xl text-sm font-semibold shadow-glow-sm hover:shadow-glow hover:bg-accent-light transition-all"
+          className="w-full h-12 flex items-center justify-center gap-2 bg-accent text-white rounded-xl text-sm font-semibold shadow-glow-sm hover:shadow-glow hover:bg-accent-light pressable"
         >
           <PlusIcon className="w-5 h-5" />
           Create New Event
@@ -102,9 +102,9 @@ export default function AdminDashboard() {
               <p className="text-text-muted text-xs mt-1">Create your first event above!</p>
             </div>
           ) : (
-            <div className="space-y-3">
+            <div className="space-y-3 stagger-list">
               {events.map(event => (
-                <div key={event.id} className="bg-bg-card border border-bg-border rounded-xl overflow-hidden">
+                <div key={event.id} className="bg-bg-card border border-bg-border rounded-xl overflow-hidden interactive-card">
                   <div className="p-4">
                     <div className="flex items-start justify-between mb-1">
                       <h3 className="text-sm font-semibold text-text-primary flex-1 mr-2 truncate">
@@ -132,19 +132,19 @@ export default function AdminDashboard() {
                   <div className="flex border-t border-bg-border divide-x divide-bg-border">
                     <button
                       onClick={() => navigate(`/admin/edit-event/${event.id}`)}
-                      className="flex-1 flex items-center justify-center gap-1.5 py-2.5 text-xs font-medium text-text-secondary hover:text-accent hover:bg-accent/5 transition-colors"
+                      className="flex-1 flex items-center justify-center gap-1.5 py-2.5 text-xs font-medium text-text-secondary hover:text-accent hover:bg-accent/5 pressable"
                     >
                       <PencilSquareIcon className="w-3.5 h-3.5" /> Edit
                     </button>
                     <button
                       onClick={() => navigate(`/admin/events/${event.id}/participants`)}
-                      className="flex-1 flex items-center justify-center gap-1.5 py-2.5 text-xs font-medium text-text-secondary hover:text-accent hover:bg-accent/5 transition-colors"
+                      className="flex-1 flex items-center justify-center gap-1.5 py-2.5 text-xs font-medium text-text-secondary hover:text-accent hover:bg-accent/5 pressable"
                     >
                       <EyeIcon className="w-3.5 h-3.5" /> View
                     </button>
                     <button
                       onClick={() => toggleEventStatus(event)}
-                      className={`flex-1 flex items-center justify-center gap-1.5 py-2.5 text-xs font-medium transition-colors ${
+                      className={`flex-1 flex items-center justify-center gap-1.5 py-2.5 text-xs font-medium pressable ${
                         event.status === 'active'
                           ? 'text-danger hover:bg-red-500/5'
                           : 'text-green-500 hover:bg-green-500/5'

@@ -23,14 +23,14 @@ function NavItem({ to, label, Icon, IconActive }) {
     <NavLink
       to={to}
       className={({ isActive }) =>
-        `flex flex-col items-center gap-0.5 min-w-[56px] py-1 transition-colors duration-150 ${
+        `flex flex-col items-center gap-0.5 min-w-[56px] py-1 pressable ${
           isActive ? 'text-accent' : 'text-text-muted hover:text-text-secondary'
         }`
       }
     >
       {({ isActive }) => (
         <>
-          {isActive ? <IconActive className="w-[22px] h-[22px]" /> : <Icon className="w-[22px] h-[22px]" />}
+          {isActive ? <IconActive className="w-[22px] h-[22px] animate-scale-in" /> : <Icon className="w-[22px] h-[22px]" />}
           <span className="text-[10px] font-medium">{label}</span>
         </>
       )}

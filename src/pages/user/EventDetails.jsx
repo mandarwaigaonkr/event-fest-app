@@ -167,7 +167,7 @@ export default function EventDetails() {
   return (
     <div className="min-h-screen bg-bg-base">
       {/* Poster / Banner */}
-      <div className="relative h-64 sm:h-80">
+      <div className="relative h-64 sm:h-80 animate-fade-in">
         {event.posterURL ? (
           <img
             src={event.posterURL}
@@ -184,14 +184,14 @@ export default function EventDetails() {
         {/* Back Button */}
         <button
           onClick={() => navigate(-1)}
-          className="absolute top-4 left-4 w-10 h-10 rounded-full bg-black/30 backdrop-blur-md flex items-center justify-center text-white hover:bg-black/50 transition-colors"
+          className="absolute top-4 left-4 w-10 h-10 rounded-full bg-black/30 backdrop-blur-md flex items-center justify-center text-white hover:bg-black/50 pressable"
         >
           <ArrowLeftIcon className="w-5 h-5" />
         </button>
       </div>
 
       {/* Content */}
-      <div className="max-w-lg mx-auto px-4 -mt-8 relative z-10 pb-8">
+      <div className="max-w-lg mx-auto px-4 -mt-8 relative z-10 pb-8 animate-fade-up">
 
         {/* Pending Invite Banner */}
         {pendingInvite && !isRegistered && (
@@ -204,14 +204,14 @@ export default function EventDetails() {
               <button 
                 onClick={() => handleInviteResponse(true)}
                 disabled={registering}
-                className="flex-1 bg-white text-accent py-2 rounded-xl text-sm font-bold hover:bg-white/90 transition-colors disabled:opacity-50"
+                className="flex-1 bg-white text-accent py-2 rounded-xl text-sm font-bold hover:bg-white/90 pressable disabled:opacity-50"
               >
                 Accept & Register
               </button>
               <button 
                 onClick={() => handleInviteResponse(false)}
                 disabled={registering}
-                className="flex-1 bg-black/20 text-white py-2 rounded-xl text-sm font-bold hover:bg-black/30 transition-colors disabled:opacity-50"
+                className="flex-1 bg-black/20 text-white py-2 rounded-xl text-sm font-bold hover:bg-black/30 pressable disabled:opacity-50"
               >
                 Decline
               </button>
@@ -297,7 +297,7 @@ export default function EventDetails() {
                 }
               }}
               disabled={registering}
-              className={`w-full h-12 rounded-xl text-sm font-semibold transition-all duration-200 flex items-center justify-center gap-2 group/btn
+              className={`w-full h-12 rounded-xl text-sm font-semibold pressable flex items-center justify-center gap-2 group/btn
                 ${(isRegistered || isWaitlisted)
                   ? 'bg-bg-elevated text-text-primary border border-bg-border hover:bg-red-500/10 hover:text-danger hover:border-danger/20'
                   : 'bg-accent text-white hover:bg-accent-light shadow-glow-sm hover:shadow-glow'

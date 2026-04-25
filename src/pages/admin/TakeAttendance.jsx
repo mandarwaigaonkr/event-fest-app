@@ -116,7 +116,7 @@ export default function TakeAttendance() {
           <div className="flex items-center gap-3 mb-3">
             <button
               onClick={() => navigate(-1)}
-              className="p-2 -ml-2 rounded-xl hover:bg-bg-elevated transition-colors"
+              className="p-2 -ml-2 rounded-xl hover:bg-bg-elevated pressable"
             >
               <ArrowLeftIcon className="w-5 h-5 text-text-secondary" />
             </button>
@@ -143,7 +143,7 @@ export default function TakeAttendance() {
           </p>
         </div>
 
-        <div className="space-y-2">
+        <div className="space-y-2 stagger-list">
           {filtered.length === 0 ? (
             <p className="text-sm text-text-muted text-center py-8">No matching students</p>
           ) : (
@@ -153,7 +153,7 @@ export default function TakeAttendance() {
                 <div 
                   key={p.id} 
                   onClick={() => toggleAbsent(p.id)} 
-                  className={`p-3 rounded-xl border flex justify-between items-center cursor-pointer transition-all ${
+                  className={`p-3 rounded-xl border flex justify-between items-center cursor-pointer pressable ${
                     isAbsent 
                       ? 'bg-red-500/10 border-danger/30 hover:bg-red-500/20' 
                       : 'bg-bg-card border-bg-border hover:border-accent/30'
@@ -189,7 +189,7 @@ export default function TakeAttendance() {
           <button 
             onClick={() => setShowConfirm(true)} 
             disabled={submitting} 
-            className="bg-accent hover:bg-accent-light text-white px-6 py-3 rounded-xl text-sm font-bold shadow-glow-sm hover:shadow-glow transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+            className="bg-accent hover:bg-accent-light text-white px-6 py-3 rounded-xl text-sm font-bold shadow-glow-sm hover:shadow-glow pressable disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
           >
             {submitting ? (
               <>

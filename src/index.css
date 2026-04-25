@@ -71,6 +71,7 @@ body {
 
 html {
   overscroll-behavior-y: none;
+  scroll-behavior: smooth;
 }
 
 /* Allow text selection in inputs */
@@ -109,13 +110,78 @@ input, textarea {
   -webkit-line-clamp: 2;
 }
 
-/* Smooth appear */
+/* Smooth motion */
 @keyframes fadeUp {
-  from { opacity: 0; transform: translateY(8px); }
+  from { opacity: 0; transform: translateY(10px); }
   to   { opacity: 1; transform: translateY(0); }
 }
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+@keyframes scaleIn {
+  from { opacity: 0; transform: translateY(8px) scale(0.98); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
 .animate-fade-up {
-  animation: fadeUp 0.35s ease-out both;
+  animation: fadeUp 220ms cubic-bezier(0.2, 0, 0, 1) both;
+}
+.animate-fade-in {
+  animation: fadeIn 160ms ease-out both;
+}
+.animate-scale-in {
+  animation: scaleIn 220ms cubic-bezier(0.2, 0, 0, 1) both;
+}
+.stagger-list > * {
+  animation: fadeUp 240ms cubic-bezier(0.2, 0, 0, 1) both;
+}
+.stagger-list > *:nth-child(2) { animation-delay: 35ms; }
+.stagger-list > *:nth-child(3) { animation-delay: 70ms; }
+.stagger-list > *:nth-child(4) { animation-delay: 105ms; }
+.stagger-list > *:nth-child(5) { animation-delay: 140ms; }
+.stagger-list > *:nth-child(n + 6) { animation-delay: 160ms; }
+
+.interactive-card {
+  transition: transform 180ms cubic-bezier(0.2, 0, 0, 1),
+    border-color 180ms ease,
+    box-shadow 180ms ease,
+    background-color 180ms ease;
+}
+.interactive-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.08);
+}
+.interactive-card:active {
+  transform: translateY(0) scale(0.99);
+}
+.pressable {
+  transition: transform 150ms cubic-bezier(0.2, 0, 0, 1),
+    background-color 150ms ease,
+    color 150ms ease,
+    border-color 150ms ease,
+    box-shadow 150ms ease;
+}
+.pressable:active {
+  transform: scale(0.97);
+}
+
+@media (hover: none) {
+  .interactive-card:hover {
+    transform: none;
+    box-shadow: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  *,
+  *::before,
+  *::after {
+    animation-duration: 1ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+    transition-duration: 1ms !important;
+  }
 }
 
 .scrollbar-hide::-webkit-scrollbar { display: none; }

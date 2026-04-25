@@ -198,7 +198,7 @@ export default function EventParticipants() {
           <div className="flex items-center gap-3 mb-3">
             <button
               onClick={() => navigate(-1)}
-              className="p-2 -ml-2 rounded-xl hover:bg-bg-elevated transition-colors"
+              className="p-2 -ml-2 rounded-xl hover:bg-bg-elevated pressable"
             >
               <ArrowLeftIcon className="w-5 h-5 text-text-secondary" />
             </button>
@@ -208,7 +208,7 @@ export default function EventParticipants() {
             </div>
             <button
               onClick={exportCSV}
-              className="p-2 rounded-xl bg-bg-elevated border border-bg-border text-text-secondary hover:text-accent hover:border-accent/50 transition-all"
+              className="p-2 rounded-xl bg-bg-elevated border border-bg-border text-text-secondary hover:text-accent hover:border-accent/50 pressable"
               title="Export CSV"
             >
               <ArrowDownTrayIcon className="w-5 h-5" />
@@ -219,13 +219,13 @@ export default function EventParticipants() {
             <div className="flex bg-bg-elevated p-1 rounded-xl mb-4">
               <button 
                 onClick={() => setActiveTab('individuals')}
-                className={`flex-1 py-1.5 text-xs font-bold rounded-lg transition-all ${activeTab === 'individuals' ? 'bg-bg-card shadow text-text-primary' : 'text-text-muted hover:text-text-primary'}`}
+                className={`flex-1 py-1.5 text-xs font-bold rounded-lg pressable ${activeTab === 'individuals' ? 'bg-bg-card shadow text-text-primary animate-scale-in' : 'text-text-muted hover:text-text-primary'}`}
               >
                 Individuals
               </button>
               <button 
                 onClick={() => setActiveTab('teams')}
-                className={`flex-1 py-1.5 text-xs font-bold rounded-lg transition-all ${activeTab === 'teams' ? 'bg-bg-card shadow text-text-primary' : 'text-text-muted hover:text-text-primary'}`}
+                className={`flex-1 py-1.5 text-xs font-bold rounded-lg pressable ${activeTab === 'teams' ? 'bg-bg-card shadow text-text-primary animate-scale-in' : 'text-text-muted hover:text-text-primary'}`}
               >
                 Teams ({teams.length})
               </button>
@@ -236,7 +236,7 @@ export default function EventParticipants() {
           <div className="grid grid-cols-4 gap-2 mb-3">
             <button
               onClick={() => setFilter('all')}
-              className={`rounded-lg py-2 text-center transition-all text-xs font-medium ${
+              className={`rounded-lg py-2 text-center pressable text-xs font-medium ${
                 filter === 'all' ? 'bg-accent text-white' : 'bg-bg-elevated text-text-secondary border border-bg-border'
               }`}
             >
@@ -244,7 +244,7 @@ export default function EventParticipants() {
             </button>
             <button
               onClick={() => setFilter('present')}
-              className={`rounded-lg py-2 text-center transition-all text-xs font-medium ${
+              className={`rounded-lg py-2 text-center pressable text-xs font-medium ${
                 filter === 'present' ? 'bg-green-500 text-white' : 'bg-bg-elevated text-text-secondary border border-bg-border'
               }`}
             >
@@ -252,7 +252,7 @@ export default function EventParticipants() {
             </button>
             <button
               onClick={() => setFilter('absent')}
-              className={`rounded-lg py-2 text-center transition-all text-xs font-medium ${
+              className={`rounded-lg py-2 text-center pressable text-xs font-medium ${
                 filter === 'absent' ? 'bg-red-500 text-white' : 'bg-bg-elevated text-text-secondary border border-bg-border'
               }`}
             >
@@ -260,7 +260,7 @@ export default function EventParticipants() {
             </button>
             <button
               onClick={() => setFilter('not_marked')}
-              className={`rounded-lg py-2 text-center transition-all text-xs font-medium ${
+              className={`rounded-lg py-2 text-center pressable text-xs font-medium ${
                 filter === 'not_marked' ? 'bg-amber-500 text-white' : 'bg-bg-elevated text-text-secondary border border-bg-border'
               }`}
             >
@@ -271,7 +271,7 @@ export default function EventParticipants() {
           {/* Take Attendance Button */}
           <button
             onClick={() => navigate(`/admin/events/${eventId}/attendance`)}
-            className="w-full mb-3 flex items-center justify-center gap-2 py-3 bg-accent/10 border border-accent/30 text-accent rounded-xl text-sm font-semibold hover:bg-accent/20 transition-all"
+            className="w-full mb-3 flex items-center justify-center gap-2 py-3 bg-accent/10 border border-accent/30 text-accent rounded-xl text-sm font-semibold hover:bg-accent/20 pressable"
           >
             <ClipboardDocumentCheckIcon className="w-5 h-5" />
             Take Attendance Mode
@@ -294,11 +294,11 @@ export default function EventParticipants() {
       {/* Content Area */}
       <div className="max-w-lg mx-auto px-4 pt-3">
         {activeTab === 'teams' ? (
-          <div className="space-y-3">
+          <div className="space-y-3 stagger-list">
             {teams.length === 0 ? (
               <div className="text-center py-16 text-sm text-text-muted">No teams created yet</div>
             ) : teams.filter(t => t.name.toLowerCase().includes(search.toLowerCase())).map(team => (
-              <div key={team.id} className="bg-bg-card border border-bg-border rounded-xl p-4">
+              <div key={team.id} className="bg-bg-card border border-bg-border rounded-xl p-4 interactive-card">
                 <div className="flex items-start justify-between mb-3">
                   <div>
                     <h3 className="text-sm font-bold text-text-primary">{team.name}</h3>
@@ -308,7 +308,7 @@ export default function EventParticipants() {
                   </div>
                   <button
                     onClick={() => setActionModal({ type: 'delete_team', team })}
-                    className="p-1.5 rounded-lg text-text-muted hover:text-danger hover:bg-red-500/10 transition-colors"
+                    className="p-1.5 rounded-lg text-text-muted hover:text-danger hover:bg-red-500/10 pressable"
                     title="Delete Team"
                   >
                     <TrashIcon className="w-4 h-4" />
@@ -343,11 +343,11 @@ export default function EventParticipants() {
               </p>
             </div>
           ) : (
-            <div className="space-y-2">
+            <div className="space-y-2 stagger-list">
             {filtered.map((p, index) => (
               <div
                 key={p.id}
-                className="bg-bg-card border border-bg-border rounded-xl p-3.5 flex items-start gap-3"
+                className="bg-bg-card border border-bg-border rounded-xl p-3.5 flex items-start gap-3 interactive-card"
               >
                 {/* Index */}
                 <div className="w-7 h-7 rounded-lg bg-bg-elevated flex items-center justify-center shrink-0 mt-0.5">
@@ -392,14 +392,14 @@ export default function EventParticipants() {
                     <div className="flex gap-1">
                       <button
                         onClick={() => setActionModal({ type: 'ban', participant: p })}
-                        className="p-1.5 rounded-lg text-text-muted hover:text-amber-500 hover:bg-amber-500/10 transition-colors"
+                        className="p-1.5 rounded-lg text-text-muted hover:text-amber-500 hover:bg-amber-500/10 pressable"
                         title="Ban participant"
                       >
                         <NoSymbolIcon className="w-4 h-4" />
                       </button>
                       <button
                         onClick={() => setActionModal({ type: 'remove', participant: p })}
-                        className="p-1.5 rounded-lg text-text-muted hover:text-danger hover:bg-red-500/10 transition-colors"
+                        className="p-1.5 rounded-lg text-text-muted hover:text-danger hover:bg-red-500/10 pressable"
                         title="Remove participant"
                       >
                         <TrashIcon className="w-4 h-4" />

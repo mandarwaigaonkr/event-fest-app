@@ -179,7 +179,7 @@ export default function EditEvent() {
           <div className="flex items-center gap-3">
             <button
               onClick={() => navigate(-1)}
-              className="p-2 -ml-2 rounded-xl hover:bg-bg-elevated transition-colors"
+              className="p-2 -ml-2 rounded-xl hover:bg-bg-elevated pressable"
             >
               <ArrowLeftIcon className="w-5 h-5 text-text-secondary" />
             </button>
@@ -187,7 +187,7 @@ export default function EditEvent() {
           </div>
           <button
             onClick={() => setShowDeleteModal(true)}
-            className="p-2 rounded-xl text-danger hover:bg-red-500/10 transition-colors"
+            className="p-2 rounded-xl text-danger hover:bg-red-500/10 pressable"
             title="Delete event"
           >
             <TrashIcon className="w-5 h-5" />
@@ -211,7 +211,7 @@ export default function EditEvent() {
           </div>
         </div>
 
-        <form onSubmit={handleSubmit} className="flex flex-col gap-5">
+        <form onSubmit={handleSubmit} className="flex flex-col gap-5 animate-fade-up">
           {/* Event Name */}
           <div>
             <label className="block text-xs font-semibold text-text-secondary mb-2 uppercase tracking-wide">
@@ -374,7 +374,7 @@ export default function EditEvent() {
           <button
             type="submit"
             disabled={saving}
-            className="w-full h-12 bg-accent text-white rounded-xl text-sm font-semibold hover:bg-accent-light shadow-glow-sm hover:shadow-glow transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 mb-4"
+            className="w-full h-12 bg-accent text-white rounded-xl text-sm font-semibold hover:bg-accent-light shadow-glow-sm hover:shadow-glow pressable disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 mb-4"
           >
             {saving ? (
               <>

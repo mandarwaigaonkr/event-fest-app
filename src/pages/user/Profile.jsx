@@ -46,7 +46,7 @@ export default function Profile() {
         </div>
       </div>
 
-      <div className="max-w-lg mx-auto px-4 pt-4 space-y-3">
+      <div className="max-w-lg mx-auto px-4 pt-4 space-y-3 stagger-list">
         {/* Avatar + Name */}
         <div className="bg-bg-card border border-bg-border rounded-2xl p-4 flex items-center gap-4">
           {user?.photoURL ? (
@@ -88,7 +88,7 @@ export default function Profile() {
 
           <button
             onClick={toggleTheme}
-            className="w-full flex items-center gap-3 px-4 py-3 hover:bg-bg-elevated/50 transition-colors"
+            className="w-full flex items-center gap-3 px-4 py-3 hover:bg-bg-elevated/50 pressable"
           >
             <div className="w-8 h-8 rounded-lg bg-bg-elevated flex items-center justify-center text-text-muted">
               {isDark ? <SunIcon className="w-4 h-4" /> : <MoonIcon className="w-4 h-4" />}
@@ -103,7 +103,7 @@ export default function Profile() {
 
           <button
             onClick={() => setShowLogoutModal(true)}
-            className="w-full flex items-center gap-3 px-4 py-3 hover:bg-danger/5 transition-colors border-t border-bg-border"
+            className="w-full flex items-center gap-3 px-4 py-3 hover:bg-danger/5 pressable border-t border-bg-border"
           >
             <div className="w-8 h-8 rounded-lg bg-danger/10 flex items-center justify-center text-danger">
               <ArrowRightStartOnRectangleIcon className="w-4 h-4" />
