@@ -23,11 +23,7 @@ function authErrorMessage(code) {
   }
 }
 
-function shouldUseRedirectSignIn() {
-  return window.matchMedia('(max-width: 768px)').matches ||
-    window.matchMedia('(display-mode: standalone)').matches ||
-    window.navigator.standalone === true
-}
+
 
 async function ensureUserProfile(firebaseUser, navigate) {
   const userRef = doc(db, 'users', firebaseUser.uid)
@@ -91,17 +87,13 @@ export default function Login() {
     setLoading(true)
     setError('')
     try {
-      if (shouldUseRedirectSignIn()) {
-        await signInWithRedirect(auth, googleProvider)
-        return
-      }
-
       const result = await signInWithPopup(auth, googleProvider)
       await ensureUserProfile(result.user, navigate)
     } catch (err) {
       console.error(err)
       setError(authErrorMessage(err.code))
-      if (err.code === 'auth/popup-blocked' || err.code === 'auth/cancelled-popup-request') {
+      // Only fallback to redirect if popup was literally blocked by the browser
+      if (err.code === 'auth/popup-blocked') {
         await signInWithRedirect(auth, googleProvider)
       }
     } finally {
