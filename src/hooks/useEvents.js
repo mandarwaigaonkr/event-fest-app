@@ -53,13 +53,14 @@ export function useEvents() {
  */
 export function useUserRegistrations() {
   const { user } = useAuth()
+  const { events } = useEvents() // Use the events we already fetch
   const [registeredEventIds, setRegisteredEventIds] = useState(new Set())
   const [waitlistedEventIds, setWaitlistedEventIds] = useState(new Set())
   const [registrations, setRegistrations] = useState([])
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    if (!user) {
+    if (!user || events.length === 0) {
       setRegisteredEventIds(new Set())
       setWaitlistedEventIds(new Set())
       setRegistrations([])
@@ -67,45 +68,54 @@ export function useUserRegistrations() {
       return
     }
 
-    const registrationsQuery = query(
-      collectionGroup(db, 'registrations'),
-      where('uid', '==', user.uid)
-    )
+    let unsubs = []
+    let currentRegs = new Map()
 
-    const unsub = onSnapshot(registrationsQuery, async (regsSnap) => {
+    const updateState = () => {
       const regIds = new Set()
       const waitIds = new Set()
-      const regList = await Promise.all(regsSnap.docs.map(async (regDoc) => {
-        const regData = regDoc.data()
-        const eventRef = regDoc.ref.parent.parent
-        const eventId = eventRef?.id
+      const regList = []
 
-        if (!eventId || regData.banned) return null
-
+      currentRegs.forEach((regData, eventId) => {
+        if (!regData || regData.banned) return
+        
         if (regData.status === 'waitlisted') waitIds.add(eventId)
         else regIds.add(eventId)
 
-        const eventSnap = await getDoc(eventRef)
-        return {
+        const eventData = events.find(e => e.id === eventId) || { id: eventId, eventId }
+        regList.push({
           ...regData,
           eventId,
-          eventData: eventSnap.exists()
-            ? { id: eventSnap.id, eventId: eventSnap.id, ...eventSnap.data() }
-            : { id: eventId, eventId },
-        }
-      }))
+          eventData
+        })
+      })
 
       setRegisteredEventIds(regIds)
       setWaitlistedEventIds(waitIds)
-      setRegistrations(regList.filter(Boolean))
+      setRegistrations(regList)
       setLoading(false)
-    }, (err) => {
-      console.error('Registrations listener error:', err)
-      setLoading(false)
+    }
+
+    // Attach a listener to the user's registration doc in each event
+    events.forEach(event => {
+      const regRef = doc(db, 'events', event.id, 'registrations', user.uid)
+      const unsub = onSnapshot(regRef, (snap) => {
+        if (snap.exists()) {
+          currentRegs.set(event.id, snap.data())
+        } else {
+          currentRegs.delete(event.id)
+        }
+        updateState()
+      }, (err) => {
+        console.error(`Reg listener error for event ${event.id}:`, err)
+      })
+      unsubs.push(unsub)
     })
 
-    return unsub
-  }, [user])
+    return () => {
+      unsubs.forEach(unsub => unsub())
+    }
+  }, [user, events])
 
   return { registeredEventIds, waitlistedEventIds, registrations, loading }
 }
