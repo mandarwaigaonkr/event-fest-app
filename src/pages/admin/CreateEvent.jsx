@@ -22,6 +22,9 @@ export default function CreateEvent() {
     venue: '',
     maxParticipants: '',
     instructions: '',
+    isTeamEvent: false,
+    minTeamSize: '',
+    maxTeamSize: '',
   })
   const [errors, setErrors] = useState({})
   const [loading, setLoading] = useState(false)
@@ -34,12 +37,19 @@ export default function CreateEvent() {
     if (!form.venue.trim()) e.venue = 'Venue is required'
     if (!form.maxParticipants || parseInt(form.maxParticipants) < 1)
       e.maxParticipants = 'Enter a valid number (min 1)'
+      
+    if (form.isTeamEvent) {
+      if (!form.minTeamSize || parseInt(form.minTeamSize) < 2)
+        e.minTeamSize = 'Minimum size must be at least 2'
+      if (!form.maxTeamSize || parseInt(form.maxTeamSize) < parseInt(form.minTeamSize))
+        e.maxTeamSize = 'Max size must be >= Min size'
+    }
     return e
   }
 
   function handleChange(e) {
-    const { name, value } = e.target
-    setForm(prev => ({ ...prev, [name]: value }))
+    const { name, value, type, checked } = e.target
+    setForm(prev => ({ ...prev, [name]: type === 'checkbox' ? checked : value }))
     setErrors(prev => ({ ...prev, [name]: '' }))
   }
 
@@ -62,12 +72,17 @@ export default function CreateEvent() {
         description: form.description.trim(),
         dateTime,
         venue: form.venue.trim(),
-        maxParticipants: parseInt(form.maxParticipants),
+        maxTeams: form.isTeamEvent ? parseInt(form.maxParticipants) : null,
+        maxParticipants: form.isTeamEvent ? null : parseInt(form.maxParticipants),
         registeredCount: 0,
+        registeredTeamsCount: form.isTeamEvent ? 0 : null,
         posterURL: '', // Storage not enabled yet
         status: 'active',
         createdBy: user.uid,
         instructions: form.instructions.trim(),
+        isTeamEvent: form.isTeamEvent,
+        minTeamSize: form.isTeamEvent ? parseInt(form.minTeamSize) : 1,
+        maxTeamSize: form.isTeamEvent ? parseInt(form.maxTeamSize) : 1,
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp(),
       })
@@ -179,10 +194,61 @@ export default function CreateEvent() {
             {errors.venue && <p className="text-xs text-danger mt-1.5">{errors.venue}</p>}
           </div>
 
-          {/* Max Participants */}
+          {/* Team Event Toggle */}
+          <div className="flex items-center gap-3 p-4 rounded-xl bg-bg-elevated border border-bg-border">
+            <input
+              id="isTeamEvent"
+              name="isTeamEvent"
+              type="checkbox"
+              checked={form.isTeamEvent}
+              onChange={handleChange}
+              className="w-5 h-5 rounded text-accent focus:ring-accent border-bg-border bg-bg-card accent-accent cursor-pointer"
+            />
+            <label htmlFor="isTeamEvent" className="text-sm font-semibold text-text-primary cursor-pointer select-none">
+              This is a Team Event
+            </label>
+          </div>
+
+          {/* Team Size Limits */}
+          {form.isTeamEvent && (
+            <div className="grid grid-cols-2 gap-3 animate-fade-up">
+              <div>
+                <label className="block text-xs font-semibold text-text-secondary mb-2 uppercase tracking-wide">
+                  Min Team Size <span className="text-danger">*</span>
+                </label>
+                <input
+                  name="minTeamSize"
+                  type="number"
+                  min="2"
+                  value={form.minTeamSize}
+                  onChange={handleChange}
+                  placeholder="e.g. 2"
+                  className={errors.minTeamSize ? inputError : inputNormal}
+                />
+                {errors.minTeamSize && <p className="text-xs text-danger mt-1.5">{errors.minTeamSize}</p>}
+              </div>
+              <div>
+                <label className="block text-xs font-semibold text-text-secondary mb-2 uppercase tracking-wide">
+                  Max Team Size <span className="text-danger">*</span>
+                </label>
+                <input
+                  name="maxTeamSize"
+                  type="number"
+                  min="2"
+                  value={form.maxTeamSize}
+                  onChange={handleChange}
+                  placeholder="e.g. 4"
+                  className={errors.maxTeamSize ? inputError : inputNormal}
+                />
+                {errors.maxTeamSize && <p className="text-xs text-danger mt-1.5">{errors.maxTeamSize}</p>}
+              </div>
+            </div>
+          )}
+
+          {/* Max Participants / Max Teams */}
           <div>
             <label className="block text-xs font-semibold text-text-secondary mb-2 uppercase tracking-wide">
-              Max Participants <span className="text-danger">*</span>
+              {form.isTeamEvent ? 'Max Number of Teams' : 'Max Participants'} <span className="text-danger">*</span>
             </label>
             <input
               name="maxParticipants"
@@ -190,7 +256,7 @@ export default function CreateEvent() {
               min="1"
               value={form.maxParticipants}
               onChange={handleChange}
-              placeholder="e.g. 100"
+              placeholder={form.isTeamEvent ? "e.g. 50" : "e.g. 100"}
               className={errors.maxParticipants ? inputError : inputNormal}
             />
             {errors.maxParticipants && <p className="text-xs text-danger mt-1.5">{errors.maxParticipants}</p>}

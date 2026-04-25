@@ -27,6 +27,9 @@ export default function EditEvent() {
     venue: '',
     maxParticipants: '',
     instructions: '',
+    isTeamEvent: false,
+    minTeamSize: '',
+    maxTeamSize: '',
   })
   const [errors, setErrors] = useState({})
 
@@ -54,8 +57,11 @@ export default function EditEvent() {
           date: dateStr,
           time: timeStr,
           venue: data.venue || '',
-          maxParticipants: String(data.maxParticipants || ''),
+          maxParticipants: String(data.isTeamEvent ? (data.maxTeams || '') : (data.maxParticipants || '')),
           instructions: data.instructions || '',
+          isTeamEvent: data.isTeamEvent || false,
+          minTeamSize: data.isTeamEvent ? String(data.minTeamSize || '') : '',
+          maxTeamSize: data.isTeamEvent ? String(data.maxTeamSize || '') : '',
         })
       } else {
         setEvent(null)
@@ -75,14 +81,22 @@ export default function EditEvent() {
     if (!form.maxParticipants || parseInt(form.maxParticipants) < 1)
       e.maxParticipants = 'Enter a valid number (min 1)'
     // Don't allow setting max below current registrations
-    if (event && parseInt(form.maxParticipants) < (event.registeredCount || 0))
-      e.maxParticipants = `Cannot be less than current registrations (${event.registeredCount})`
+    const currentCount = form.isTeamEvent ? (event?.registeredTeamsCount || 0) : (event?.registeredCount || 0)
+    if (event && parseInt(form.maxParticipants) < currentCount)
+      e.maxParticipants = `Cannot be less than current registrations (${currentCount})`
+      
+    if (form.isTeamEvent) {
+      if (!form.minTeamSize || parseInt(form.minTeamSize) < 2)
+        e.minTeamSize = 'Minimum size must be at least 2'
+      if (!form.maxTeamSize || parseInt(form.maxTeamSize) < parseInt(form.minTeamSize))
+        e.maxTeamSize = 'Max size must be >= Min size'
+    }
     return e
   }
 
   function handleChange(e) {
-    const { name, value } = e.target
-    setForm(prev => ({ ...prev, [name]: value }))
+    const { name, value, type, checked } = e.target
+    setForm(prev => ({ ...prev, [name]: type === 'checkbox' ? checked : value }))
     setErrors(prev => ({ ...prev, [name]: '' }))
   }
 
@@ -105,8 +119,12 @@ export default function EditEvent() {
         description: form.description.trim(),
         dateTime,
         venue: form.venue.trim(),
-        maxParticipants: parseInt(form.maxParticipants),
+        maxTeams: form.isTeamEvent ? parseInt(form.maxParticipants) : null,
+        maxParticipants: form.isTeamEvent ? null : parseInt(form.maxParticipants),
         instructions: form.instructions.trim(),
+        isTeamEvent: form.isTeamEvent,
+        minTeamSize: form.isTeamEvent ? parseInt(form.minTeamSize) : 1,
+        maxTeamSize: form.isTeamEvent ? parseInt(form.maxTeamSize) : 1,
         updatedAt: serverTimestamp(),
       })
 
@@ -181,11 +199,11 @@ export default function EditEvent() {
         {/* Registration info banner */}
         <div className="bg-accent/5 border border-accent/20 rounded-xl p-3 mb-5 flex items-center gap-3">
           <div className="w-10 h-10 rounded-lg bg-accent/10 flex items-center justify-center shrink-0">
-            <span className="text-accent text-sm font-bold">{event.registeredCount || 0}</span>
+            <span className="text-accent text-sm font-bold">{event.isTeamEvent ? (event.registeredTeamsCount || 0) : (event.registeredCount || 0)}</span>
           </div>
           <div>
             <p className="text-xs font-semibold text-text-primary">
-              {event.registeredCount || 0} / {event.maxParticipants} registered
+              {event.isTeamEvent ? (event.registeredTeamsCount || 0) : (event.registeredCount || 0)} / {event.isTeamEvent ? event.maxTeams : event.maxParticipants} {event.isTeamEvent ? 'teams' : 'registered'}
             </p>
             <p className="text-[10px] text-text-muted">
               Changes will reflect for all registered participants
@@ -269,10 +287,61 @@ export default function EditEvent() {
             {errors.venue && <p className="text-xs text-danger mt-1.5">{errors.venue}</p>}
           </div>
 
-          {/* Max Participants */}
+          {/* Team Event Toggle */}
+          <div className="flex items-center gap-3 p-4 rounded-xl bg-bg-elevated border border-bg-border">
+            <input
+              id="isTeamEvent"
+              name="isTeamEvent"
+              type="checkbox"
+              checked={form.isTeamEvent}
+              onChange={handleChange}
+              className="w-5 h-5 rounded text-accent focus:ring-accent border-bg-border bg-bg-card accent-accent cursor-pointer"
+            />
+            <label htmlFor="isTeamEvent" className="text-sm font-semibold text-text-primary cursor-pointer select-none">
+              This is a Team Event
+            </label>
+          </div>
+
+          {/* Team Size Limits */}
+          {form.isTeamEvent && (
+            <div className="grid grid-cols-2 gap-3 animate-fade-up">
+              <div>
+                <label className="block text-xs font-semibold text-text-secondary mb-2 uppercase tracking-wide">
+                  Min Team Size <span className="text-danger">*</span>
+                </label>
+                <input
+                  name="minTeamSize"
+                  type="number"
+                  min="2"
+                  value={form.minTeamSize}
+                  onChange={handleChange}
+                  placeholder="e.g. 2"
+                  className={errors.minTeamSize ? inputError : inputNormal}
+                />
+                {errors.minTeamSize && <p className="text-xs text-danger mt-1.5">{errors.minTeamSize}</p>}
+              </div>
+              <div>
+                <label className="block text-xs font-semibold text-text-secondary mb-2 uppercase tracking-wide">
+                  Max Team Size <span className="text-danger">*</span>
+                </label>
+                <input
+                  name="maxTeamSize"
+                  type="number"
+                  min="2"
+                  value={form.maxTeamSize}
+                  onChange={handleChange}
+                  placeholder="e.g. 4"
+                  className={errors.maxTeamSize ? inputError : inputNormal}
+                />
+                {errors.maxTeamSize && <p className="text-xs text-danger mt-1.5">{errors.maxTeamSize}</p>}
+              </div>
+            </div>
+          )}
+
+          {/* Max Participants / Max Teams */}
           <div>
             <label className="block text-xs font-semibold text-text-secondary mb-2 uppercase tracking-wide">
-              Max Participants <span className="text-danger">*</span>
+              {form.isTeamEvent ? 'Max Number of Teams' : 'Max Participants'} <span className="text-danger">*</span>
             </label>
             <input
               name="maxParticipants"
@@ -280,7 +349,7 @@ export default function EditEvent() {
               min="1"
               value={form.maxParticipants}
               onChange={handleChange}
-              placeholder="e.g. 100"
+              placeholder={form.isTeamEvent ? "e.g. 50" : "e.g. 100"}
               className={errors.maxParticipants ? inputError : inputNormal}
             />
             {errors.maxParticipants && <p className="text-xs text-danger mt-1.5">{errors.maxParticipants}</p>}

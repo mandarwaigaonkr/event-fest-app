@@ -3,13 +3,14 @@
 
 import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { doc, onSnapshot, getDoc } from 'firebase/firestore'
+import { doc, onSnapshot, getDoc, collection, query, where } from 'firebase/firestore'
 import { db } from '../../firebase'
 import { useAuth } from '../../hooks/useAuth'
-import { registerForEvent, unregisterFromEvent } from '../../hooks/useEvents'
+import { registerForEvent, unregisterFromEvent, respondToTeamInvite } from '../../hooks/useEvents'
 import { formatDateTime } from '../../utils/formatters'
 import LoadingSpinner from '../../components/LoadingSpinner'
 import ConfirmModal from '../../components/ConfirmModal'
+import TeamRegistrationModal from '../../components/TeamRegistrationModal'
 import {
   ArrowLeftIcon,
   CalendarIcon,
@@ -37,6 +38,8 @@ export default function EventDetails() {
   const [isWaitlisted, setIsWaitlisted] = useState(false)
   const [registering, setRegistering] = useState(false)
   const [modalState, setModalState] = useState(null) // 'register' | 'unregister' | null
+  const [showTeamModal, setShowTeamModal] = useState(false)
+  const [pendingInvite, setPendingInvite] = useState(null)
 
   useEffect(() => {
     if (!eventId) return
@@ -76,6 +79,30 @@ export default function EventDetails() {
     checkReg()
   }, [eventId, user, event?.registeredCount])
 
+  // Check for pending team invites
+  useEffect(() => {
+    if (!eventId || !user || !event?.isTeamEvent || isRegistered) return
+
+    const unsub = onSnapshot(
+      query(collection(db, 'events', eventId, 'teams'), where('invitedUids', 'array-contains', user.uid)),
+      (snap) => {
+        if (!snap.empty) {
+          // Find the team where user is still 'pending'
+          for (const doc of snap.docs) {
+            const teamData = { id: doc.id, ...doc.data() }
+            const myStatus = teamData.members.find(m => m.uid === user.uid)?.status
+            if (myStatus === 'pending') {
+              setPendingInvite(teamData)
+              return
+            }
+          }
+        }
+        setPendingInvite(null)
+      }
+    )
+    return unsub
+  }, [eventId, user, event?.isTeamEvent, isRegistered])
+
   if (loading) return <LoadingSpinner />
 
   if (!event) {
@@ -94,7 +121,9 @@ export default function EventDetails() {
     )
   }
 
-  const spotsLeft = event.maxParticipants - (event.registeredCount || 0)
+  const spotsLeft = event.isTeamEvent
+    ? event.maxTeams - (event.registeredTeamsCount || 0)
+    : event.maxParticipants - (event.registeredCount || 0)
   const isFull = spotsLeft <= 0
   const gradient = GRADIENT_FALLBACKS[eventId.charCodeAt(0) % GRADIENT_FALLBACKS.length]
 
@@ -118,6 +147,19 @@ export default function EventDetails() {
       }
     }
     
+    setRegistering(false)
+  }
+
+  async function handleInviteResponse(accept) {
+    if (!profile || !pendingInvite) return
+    setRegistering(true)
+    const success = await respondToTeamInvite(eventId, pendingInvite.id, profile, accept)
+    if (success && accept) {
+      setIsRegistered(true)
+      setPendingInvite(null)
+    } else if (success && !accept) {
+      setPendingInvite(null)
+    }
     setRegistering(false)
   }
 
@@ -149,6 +191,33 @@ export default function EventDetails() {
 
       {/* Content */}
       <div className="max-w-lg mx-auto px-4 -mt-8 relative z-10 pb-8">
+
+        {/* Pending Invite Banner */}
+        {pendingInvite && !isRegistered && (
+          <div className="bg-accent text-white rounded-2xl p-4 shadow-xl mb-4 animate-fade-up border border-accent-light">
+            <h3 className="font-bold text-base mb-1">Team Invitation</h3>
+            <p className="text-sm text-white/90 mb-4">
+              <span className="font-semibold">{pendingInvite.members.find(m=>m.uid===pendingInvite.leaderUid)?.name || 'Someone'}</span> invited you to join team <span className="font-bold">"{pendingInvite.name}"</span>.
+            </p>
+            <div className="flex gap-2">
+              <button 
+                onClick={() => handleInviteResponse(true)}
+                disabled={registering}
+                className="flex-1 bg-white text-accent py-2 rounded-xl text-sm font-bold hover:bg-white/90 transition-colors disabled:opacity-50"
+              >
+                Accept & Register
+              </button>
+              <button 
+                onClick={() => handleInviteResponse(false)}
+                disabled={registering}
+                className="flex-1 bg-black/20 text-white py-2 rounded-xl text-sm font-bold hover:bg-black/30 transition-colors disabled:opacity-50"
+              >
+                Decline
+              </button>
+            </div>
+          </div>
+        )}
+
         <div className="bg-bg-card border border-bg-border rounded-2xl p-5 shadow-lg">
           {/* Title */}
           <h1 className="text-xl font-bold text-text-primary mb-4">{event.name}</h1>
@@ -174,9 +243,11 @@ export default function EventDetails() {
             <div className="flex items-start gap-3 p-3 bg-bg-elevated rounded-xl">
               <UsersIcon className="w-5 h-5 text-accent mt-0.5 shrink-0" />
               <div>
-                <p className="text-xs text-text-muted font-medium uppercase tracking-wide">Participants</p>
+                <p className="text-xs text-text-muted font-medium uppercase tracking-wide">
+                  {event.isTeamEvent ? 'Teams' : 'Participants'}
+                </p>
                 <p className="text-sm text-text-primary font-medium">
-                  {event.registeredCount || 0} / {event.maxParticipants}
+                  {event.isTeamEvent ? (event.registeredTeamsCount || 0) : (event.registeredCount || 0)} / {event.isTeamEvent ? event.maxTeams : event.maxParticipants}
                   {spotsLeft > 0 && spotsLeft <= 5 && (
                     <span className="text-warning ml-2 text-xs">({spotsLeft} left)</span>
                   )}
@@ -211,41 +282,47 @@ export default function EventDetails() {
           )}
 
           {/* Register / Unregister Button */}
-          <button
-            onClick={() => {
-              if (isRegistered || isWaitlisted) {
-                setModalState('unregister')
-              } else {
-                setModalState('register')
-              }
-            }}
-            disabled={registering}
-            className={`w-full h-12 rounded-xl text-sm font-semibold transition-all duration-200 flex items-center justify-center gap-2 group/btn
-              ${(isRegistered || isWaitlisted)
-                ? 'bg-bg-elevated text-text-primary border border-bg-border hover:bg-red-500/10 hover:text-danger hover:border-danger/20'
-                : 'bg-accent text-white hover:bg-accent-light shadow-glow-sm hover:shadow-glow'
-              }`}
-          >
-            {registering ? (
-              <>
-                <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                Processing...
-              </>
-            ) : isRegistered ? (
-              <span className="group-hover/btn:hidden">✓ Already Registered</span>
-            ) : isWaitlisted ? (
-              <span className="group-hover/btn:hidden">⏳ Waitlisted</span>
-            ) : isFull ? (
-              'Join Waitlist'
-            ) : (
-              'Register Now'
-            )}
-            {(isRegistered || isWaitlisted) && !registering && (
-              <span className="hidden group-hover/btn:inline">
-                {isWaitlisted ? 'Leave Waitlist' : 'Cancel Registration'}
-              </span>
-            )}
-          </button>
+          {!pendingInvite && (
+            <button
+              onClick={() => {
+                if (isRegistered || isWaitlisted) {
+                  setModalState('unregister')
+                } else {
+                  if (event.isTeamEvent) {
+                    setShowTeamModal(true)
+                  } else {
+                    setModalState('register')
+                  }
+                }
+              }}
+              disabled={registering}
+              className={`w-full h-12 rounded-xl text-sm font-semibold transition-all duration-200 flex items-center justify-center gap-2 group/btn
+                ${(isRegistered || isWaitlisted)
+                  ? 'bg-bg-elevated text-text-primary border border-bg-border hover:bg-red-500/10 hover:text-danger hover:border-danger/20'
+                  : 'bg-accent text-white hover:bg-accent-light shadow-glow-sm hover:shadow-glow'
+                }`}
+            >
+              {registering ? (
+                <>
+                  <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                  Processing...
+                </>
+              ) : isRegistered ? (
+                <span className="group-hover/btn:hidden">✓ Already Registered</span>
+              ) : isWaitlisted ? (
+                <span className="group-hover/btn:hidden">⏳ Waitlisted</span>
+              ) : isFull ? (
+                'Join Waitlist'
+              ) : (
+                event.isTeamEvent ? 'Register (Create Team)' : 'Register Now'
+              )}
+              {(isRegistered || isWaitlisted) && !registering && (
+                <span className="hidden group-hover/btn:inline">
+                  {isWaitlisted ? 'Leave Waitlist' : 'Cancel Registration'}
+                </span>
+              )}
+            </button>
+          )}
         </div>
       </div>
 
@@ -269,6 +346,15 @@ export default function EventDetails() {
         isDestructive={modalState === 'unregister'}
         onConfirm={handleConfirm}
         onCancel={() => setModalState(null)}
+      />
+
+      <TeamRegistrationModal
+        isOpen={showTeamModal}
+        onClose={() => setShowTeamModal(false)}
+        event={event}
+        currentUser={user}
+        profile={profile}
+        onSuccess={() => setIsRegistered(true)}
       />
     </div>
   )

@@ -23,14 +23,22 @@ service cloud.firestore {
     match /events/{eventId} {
       allow read: if isSignedIn();
       allow create, delete: if isAdmin();
-      // Allow admins full update, allow users to update ONLY registeredCount and waitlistCount
-      allow update: if isAdmin() || (isSignedIn() && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['registeredCount', 'waitlistCount']));
+      // Allow admins full update, allow users to update ONLY registeredCount, waitlistCount, registeredTeamsCount, waitlistTeamsCount
+      allow update: if isAdmin() || (isSignedIn() && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['registeredCount', 'waitlistCount', 'registeredTeamsCount', 'waitlistTeamsCount']));
 
       match /registrations/{uid} {
         allow read: if isOwner(uid) || isAdmin();
         allow create: if isOwner(uid);
         allow update: if isAdmin();
         allow delete: if isOwner(uid) || isAdmin();
+      }
+
+      match /teams/{teamId} {
+        allow read: if isAdmin() || (isSignedIn() && (request.auth.uid in resource.data.invitedUids || request.auth.uid in resource.data.memberUids));
+        allow create: if isSignedIn() && request.auth.uid == request.resource.data.leaderUid;
+        // Allow invited users or existing members to update the team (e.g. accepting an invite)
+        allow update: if isAdmin() || (isSignedIn() && (request.auth.uid in resource.data.invitedUids || request.auth.uid in resource.data.memberUids));
+        allow delete: if isAdmin();
       }
     }
   }

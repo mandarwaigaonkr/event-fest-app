@@ -176,16 +176,6 @@ export async function unregisterFromEvent(eventId, userId) {
   const regRef = doc(db, 'events', eventId, 'registrations', userId)
 
   try {
-    // 1. Fetch next in line (outside of transaction)
-    const regsQuery = query(
-      collection(db, 'events', eventId, 'registrations'),
-      where('status', '==', 'waitlisted'),
-      orderBy('registeredAt', 'asc'),
-      limit(1)
-    )
-    const snap = await getDocs(regsQuery)
-    const nextInLineDoc = snap.empty ? null : snap.docs[0]
-
     // 2. Run the atomic transaction
     await runTransaction(db, async (transaction) => {
       const eventDoc = await transaction.get(eventRef)
@@ -205,36 +195,49 @@ export async function unregisterFromEvent(eventId, userId) {
       // Delete registration document
       transaction.delete(regRef)
 
-      if (isWaitlisted) {
-        // Just decrement waitlist count
-        transaction.update(eventRef, {
-          waitlistCount: Math.max(0, (eventData.waitlistCount || 0) - 1),
-        })
-      } else {
-        let newRegisteredCount = Math.max(0, (eventData.registeredCount || 0) - 1)
-        let newWaitlistCount = eventData.waitlistCount || 0
-
-        // Check if there are waitlisted users to promote
-        if (newWaitlistCount > 0 && nextInLineDoc && nextInLineDoc.id !== userId) {
-            const nextRef = doc(db, 'events', eventId, 'registrations', nextInLineDoc.id)
-            const nextActualDoc = await transaction.get(nextRef)
-            
-            // Verify they are still waitlisted
-            if (nextActualDoc.exists() && nextActualDoc.data().status === 'waitlisted') {
-              transaction.update(nextRef, {
-                status: 'registered'
-              })
-
-              newRegisteredCount += 1
-              newWaitlistCount = Math.max(0, newWaitlistCount - 1)
-            }
+      if (eventData.isTeamEvent && regData.teamId) {
+        const teamRef = doc(db, 'events', eventId, 'teams', regData.teamId)
+        const teamDoc = await transaction.get(teamRef)
+        if (teamDoc.exists()) {
+          const teamData = teamDoc.data()
+          if (teamData.leaderUid === userId) {
+             // Leader unregistering cancels the team
+             transaction.update(teamRef, { status: 'cancelled' })
+             if (isWaitlisted) {
+               transaction.update(eventRef, {
+                 waitlistCount: Math.max(0, (eventData.waitlistCount || 0) - 1),
+                 waitlistTeamsCount: Math.max(0, (eventData.waitlistTeamsCount || 0) - 1)
+               })
+             } else {
+               transaction.update(eventRef, {
+                 registeredCount: Math.max(0, (eventData.registeredCount || 0) - 1),
+                 registeredTeamsCount: Math.max(0, (eventData.registeredTeamsCount || 0) - 1)
+               })
+             }
+          } else {
+             // Member unregistering leaves the team
+             const newMemberUids = (teamData.memberUids || []).filter(uid => uid !== userId)
+             const newMembers = (teamData.members || []).map(m => m.uid === userId ? { ...m, status: 'left' } : m)
+             transaction.update(teamRef, { memberUids: newMemberUids, members: newMembers, status: 'incomplete' })
+             
+             if (isWaitlisted) {
+               transaction.update(eventRef, { waitlistCount: Math.max(0, (eventData.waitlistCount || 0) - 1) })
+             } else {
+               transaction.update(eventRef, { registeredCount: Math.max(0, (eventData.registeredCount || 0) - 1) })
+             }
+          }
         }
-
-        // Update event counts
-        transaction.update(eventRef, {
-          registeredCount: newRegisteredCount,
-          waitlistCount: newWaitlistCount,
-        })
+      } else {
+        // Individual event logic
+        if (isWaitlisted) {
+          transaction.update(eventRef, {
+            waitlistCount: Math.max(0, (eventData.waitlistCount || 0) - 1),
+          })
+        } else {
+          transaction.update(eventRef, {
+            registeredCount: Math.max(0, (eventData.registeredCount || 0) - 1),
+          })
+        }
       }
     })
 
@@ -243,6 +246,166 @@ export async function unregisterFromEvent(eventId, userId) {
   } catch (err) {
     console.error('Unregistration error:', err)
     toast.error(err.message || 'Failed to remove registration.')
+    return false
+  }
+}
+
+/**
+ * Create a team and register the leader
+ */
+export async function createTeamRegistration(eventId, teamName, membersData, userProfile) {
+  const eventRef = doc(db, 'events', eventId)
+  const teamRef = doc(collection(db, 'events', eventId, 'teams'))
+  const regRef = doc(db, 'events', eventId, 'registrations', userProfile.uid)
+
+  try {
+    await runTransaction(db, async (transaction) => {
+      const eventDoc = await transaction.get(eventRef)
+      if (!eventDoc.exists()) throw new Error('Event not found')
+
+      const eventData = eventDoc.data()
+      if (!eventData.isTeamEvent) throw new Error('Not a team event')
+
+      const existingReg = await transaction.get(regRef)
+      if (existingReg.exists()) throw new Error('You are already registered')
+
+      const currentTeamsCount = eventData.registeredTeamsCount || 0
+      const isWaitlisted = currentTeamsCount >= eventData.maxTeams
+
+      // Create team doc
+      transaction.set(teamRef, {
+        name: teamName,
+        leaderUid: userProfile.uid,
+        members: membersData,
+        memberUids: [userProfile.uid],
+        invitedUids: membersData.filter(m => m.status === 'pending').map(m => m.uid),
+        status: 'incomplete', // Will become valid when enough members accept
+        isWaitlisted: isWaitlisted,
+        createdAt: serverTimestamp()
+      })
+
+      // Create leader registration
+      transaction.set(regRef, {
+        uid: userProfile.uid,
+        name: userProfile.name,
+        email: userProfile.email,
+        regNumber: userProfile.regNumber || '',
+        class: userProfile.class || '',
+        department: userProfile.department || '',
+        registeredAt: serverTimestamp(),
+        attendance: 'not_marked',
+        attendanceMarkedAt: null,
+        banned: false,
+        status: isWaitlisted ? 'waitlisted' : 'registered',
+        teamId: teamRef.id
+      })
+
+      if (!isWaitlisted) {
+        transaction.update(eventRef, {
+          registeredCount: (eventData.registeredCount || 0) + 1,
+          registeredTeamsCount: currentTeamsCount + 1,
+        })
+      } else {
+        transaction.update(eventRef, {
+          waitlistCount: (eventData.waitlistCount || 0) + 1,
+          waitlistTeamsCount: (eventData.waitlistTeamsCount || 0) + 1,
+        })
+      }
+    })
+
+    toast.success('Team created! Invites sent. 🎉')
+    return true
+  } catch (err) {
+    console.error('Team creation error:', err)
+    toast.error(err.message || 'Failed to create team.')
+    return false
+  }
+}
+
+/**
+ * Respond to a team invite (accept/reject)
+ */
+export async function respondToTeamInvite(eventId, teamId, userProfile, accept) {
+  const eventRef = doc(db, 'events', eventId)
+  const teamRef = doc(db, 'events', eventId, 'teams', teamId)
+  const regRef = doc(db, 'events', eventId, 'registrations', userProfile.uid)
+
+  try {
+    await runTransaction(db, async (transaction) => {
+      const teamDoc = await transaction.get(teamRef)
+      if (!teamDoc.exists()) throw new Error('Team not found')
+
+      const teamData = teamDoc.data()
+      const memberIndex = teamData.members.findIndex(m => m.uid === userProfile.uid)
+      
+      if (memberIndex === -1) throw new Error('You are not invited to this team')
+      if (teamData.members[memberIndex].status !== 'pending') throw new Error('Invite already processed')
+
+      if (!accept) {
+        // Reject
+        teamData.members[memberIndex].status = 'rejected'
+        const newInvitedUids = (teamData.invitedUids || []).filter(uid => uid !== userProfile.uid)
+        transaction.update(teamRef, { 
+          members: teamData.members,
+          invitedUids: newInvitedUids
+        })
+        return
+      }
+
+      // Accept
+      const eventDoc = await transaction.get(eventRef)
+      const eventData = eventDoc.data()
+
+      const existingReg = await transaction.get(regRef)
+      if (existingReg.exists()) throw new Error('You are already registered for this event')
+
+      const isWaitlisted = teamData.isWaitlisted === true
+
+      // Update team member status
+      teamData.members[memberIndex].status = 'accepted'
+      
+      // Check if team becomes valid
+      const acceptedCount = teamData.members.filter(m => m.status === 'accepted' || m.status === 'leader').length
+      const teamStatus = acceptedCount >= (eventData.minTeamSize || 1) ? 'valid' : 'incomplete'
+
+      const newInvitedUids = (teamData.invitedUids || []).filter(uid => uid !== userProfile.uid)
+      const newMemberUids = [...(teamData.memberUids || []), userProfile.uid]
+
+      transaction.update(teamRef, { 
+        members: teamData.members,
+        invitedUids: newInvitedUids,
+        memberUids: newMemberUids,
+        status: teamStatus
+      })
+
+      // Create registration
+      transaction.set(regRef, {
+        uid: userProfile.uid,
+        name: userProfile.name,
+        email: userProfile.email,
+        regNumber: userProfile.regNumber || '',
+        class: userProfile.class || '',
+        department: userProfile.department || '',
+        registeredAt: serverTimestamp(),
+        attendance: 'not_marked',
+        attendanceMarkedAt: null,
+        banned: false,
+        status: isWaitlisted ? 'waitlisted' : 'registered',
+        teamId: teamRef.id
+      })
+
+      if (!isWaitlisted) {
+        transaction.update(eventRef, { registeredCount: (eventData.registeredCount || 0) + 1 })
+      } else {
+        transaction.update(eventRef, { waitlistCount: (eventData.waitlistCount || 0) + 1 })
+      }
+    })
+
+    toast.success(accept ? 'Joined team!' : 'Invite rejected')
+    return true
+  } catch (err) {
+    console.error('Invite response error:', err)
+    toast.error(err.message || 'Failed to process invite.')
     return false
   }
 }

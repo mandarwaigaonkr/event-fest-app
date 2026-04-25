@@ -29,7 +29,9 @@ export default function EventCard({
   const navigate = useNavigate()
   const [modalState, setModalState] = useState(null)
 
-  const spotsLeft = event.maxParticipants - (event.registeredCount || 0)
+  const spotsLeft = event.isTeamEvent
+    ? event.maxTeams - (event.registeredTeamsCount || 0)
+    : event.maxParticipants - (event.registeredCount || 0)
   const isFull = spotsLeft <= 0
   const almostFull = spotsLeft > 0 && spotsLeft <= 5
 
@@ -100,7 +102,9 @@ export default function EventCard({
           </div>
           <div className="flex items-center gap-2 text-text-secondary text-xs">
             <UsersIcon className="w-3.5 h-3.5 text-text-muted shrink-0" />
-            <span>{event.registeredCount || 0} / {event.maxParticipants}</span>
+            <span>
+              {event.isTeamEvent ? (event.registeredTeamsCount || 0) : (event.registeredCount || 0)} / {event.isTeamEvent ? event.maxTeams : event.maxParticipants} {event.isTeamEvent ? 'teams' : ''}
+            </span>
           </div>
         </div>
 
@@ -111,7 +115,12 @@ export default function EventCard({
             if (isRegistered || isWaitlisted) {
               if (onUnregister) setModalState('unregister')
             } else {
-              if (onRegister) setModalState('register')
+              if (event.isTeamEvent) {
+                // Redirect team events to details page for the modal
+                navigate(`/event/${event.eventId || event.id}`)
+              } else if (onRegister) {
+                setModalState('register')
+              }
             }
           }}
           disabled={registering}

@@ -11,13 +11,15 @@ export default function ConfirmModal({
   isDestructive,
   children
 }) {
-  if (!isOpen) return null
-
   // Prevent scrolling on the body while modal is open
   useEffect(() => {
-    document.body.style.overflow = 'hidden'
-    return () => { document.body.style.overflow = 'auto' }
-  }, [])
+    if (isOpen) {
+      document.body.style.overflow = 'hidden'
+      return () => { document.body.style.overflow = 'auto' }
+    }
+  }, [isOpen])
+
+  if (!isOpen) return null
 
   return (
     <div 

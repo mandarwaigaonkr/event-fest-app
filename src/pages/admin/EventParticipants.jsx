@@ -36,6 +36,8 @@ export default function EventParticipants() {
   const [search, setSearch] = useState('')
   const [filter, setFilter] = useState('all') // all | present | absent | not_marked
   const [actionModal, setActionModal] = useState(null)
+  const [teams, setTeams] = useState([])
+  const [activeTab, setActiveTab] = useState('individuals') // 'individuals' | 'teams'
 
   // Load event
   useEffect(() => {
@@ -72,6 +74,17 @@ export default function EventParticipants() {
     })
     return unsub
   }, [eventId])
+
+  // Load teams
+  useEffect(() => {
+    if (!event?.isTeamEvent) return
+    const unsub = onSnapshot(collection(db, 'events', eventId, 'teams'), (snap) => {
+      const list = snap.docs.map(d => ({ id: d.id, ...d.data() }))
+      list.sort((a,b) => (b.createdAt?.toMillis() || 0) - (a.createdAt?.toMillis() || 0))
+      setTeams(list)
+    })
+    return unsub
+  }, [eventId, event?.isTeamEvent])
 
   // Filter & search
   const filtered = participants
@@ -117,6 +130,11 @@ export default function EventParticipants() {
         }
         setParticipants(prev => prev.filter(p => p.id !== participant.id))
         toast.success(`${participant.name} has been removed`)
+      } else if (type === 'delete_team') {
+        const { team } = actionModal
+        // Note: Realistically we should also delete the registrations, but here we just delete the team document.
+        await deleteDoc(doc(db, 'events', eventId, 'teams', team.id))
+        toast.success(`Team "${team.name}" has been deleted`)
       }
     } catch (err) {
       toast.error('Action failed')
@@ -197,6 +215,23 @@ export default function EventParticipants() {
             </button>
           </div>
 
+          {event?.isTeamEvent && (
+            <div className="flex bg-bg-elevated p-1 rounded-xl mb-4">
+              <button 
+                onClick={() => setActiveTab('individuals')}
+                className={`flex-1 py-1.5 text-xs font-bold rounded-lg transition-all ${activeTab === 'individuals' ? 'bg-bg-card shadow text-text-primary' : 'text-text-muted hover:text-text-primary'}`}
+              >
+                Individuals
+              </button>
+              <button 
+                onClick={() => setActiveTab('teams')}
+                className={`flex-1 py-1.5 text-xs font-bold rounded-lg transition-all ${activeTab === 'teams' ? 'bg-bg-card shadow text-text-primary' : 'text-text-muted hover:text-text-primary'}`}
+              >
+                Teams ({teams.length})
+              </button>
+            </div>
+          )}
+
           {/* Stats */}
           <div className="grid grid-cols-4 gap-2 mb-3">
             <button
@@ -247,7 +282,7 @@ export default function EventParticipants() {
             <MagnifyingGlassIcon className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-text-muted" />
             <input
               type="text"
-              placeholder="Search by name, email, reg no..."
+              placeholder={activeTab === 'teams' ? "Search teams..." : "Search by name, email, reg no..."}
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               className="w-full h-10 pl-10 pr-4 rounded-xl bg-bg-elevated border border-bg-border text-sm text-text-primary placeholder-text-muted outline-none focus:border-accent transition-colors"
@@ -256,16 +291,59 @@ export default function EventParticipants() {
         </div>
       </div>
 
-      {/* Participant List */}
+      {/* Content Area */}
       <div className="max-w-lg mx-auto px-4 pt-3">
-        {filtered.length === 0 ? (
-          <div className="text-center py-16">
-            <p className="text-text-muted text-sm">
-              {search ? 'No matching participants' : 'No participants yet'}
-            </p>
+        {activeTab === 'teams' ? (
+          <div className="space-y-3">
+            {teams.length === 0 ? (
+              <div className="text-center py-16 text-sm text-text-muted">No teams created yet</div>
+            ) : teams.filter(t => t.name.toLowerCase().includes(search.toLowerCase())).map(team => (
+              <div key={team.id} className="bg-bg-card border border-bg-border rounded-xl p-4">
+                <div className="flex items-start justify-between mb-3">
+                  <div>
+                    <h3 className="text-sm font-bold text-text-primary">{team.name}</h3>
+                    <p className="text-[10px] text-text-muted uppercase tracking-wide mt-0.5">
+                      Status: <span className={team.status === 'valid' ? 'text-success' : 'text-warning'}>{team.status}</span>
+                    </p>
+                  </div>
+                  <button
+                    onClick={() => setActionModal({ type: 'delete_team', team })}
+                    className="p-1.5 rounded-lg text-text-muted hover:text-danger hover:bg-red-500/10 transition-colors"
+                    title="Delete Team"
+                  >
+                    <TrashIcon className="w-4 h-4" />
+                  </button>
+                </div>
+                
+                <div className="space-y-2">
+                  {team.members.map((m, i) => (
+                    <div key={i} className="flex items-center justify-between bg-bg-elevated rounded-lg px-3 py-2">
+                      <div className="flex-1 min-w-0 pr-2">
+                        <p className="text-xs font-semibold text-text-primary truncate">{m.name} {m.status === 'leader' && '👑'}</p>
+                        <p className="text-[10px] text-text-muted">{m.regNumber}</p>
+                      </div>
+                      <span className={`text-[10px] font-bold uppercase tracking-wide px-2 py-0.5 rounded ${
+                        m.status === 'accepted' || m.status === 'leader' ? 'bg-success/10 text-success' :
+                        m.status === 'rejected' ? 'bg-danger/10 text-danger' :
+                        'bg-amber-500/10 text-amber-500'
+                      }`}>
+                        {m.status}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ))}
           </div>
         ) : (
-          <div className="space-y-2">
+          filtered.length === 0 ? (
+            <div className="text-center py-16">
+              <p className="text-text-muted text-sm">
+                {search ? 'No matching participants' : 'No participants yet'}
+              </p>
+            </div>
+          ) : (
+            <div className="space-y-2">
             {filtered.map((p, index) => (
               <div
                 key={p.id}
@@ -332,19 +410,22 @@ export default function EventParticipants() {
               </div>
             ))}
           </div>
+          )
         )}
       </div>
 
       {/* Action Confirmation Modal */}
       <ConfirmModal
         isOpen={actionModal !== null}
-        title={actionModal?.type === 'ban' ? 'Ban Participant' : 'Remove Participant'}
+        title={actionModal?.type === 'ban' ? 'Ban Participant' : actionModal?.type === 'remove' ? 'Remove Participant' : 'Delete Team'}
         message={
           actionModal?.type === 'ban'
             ? `Ban ${actionModal?.participant?.name} from this event? They will no longer appear in the participant list.`
-            : `Remove ${actionModal?.participant?.name} and free up their spot? This cannot be undone.`
+            : actionModal?.type === 'remove'
+            ? `Remove ${actionModal?.participant?.name} and free up their spot? This cannot be undone.`
+            : `Are you sure you want to delete team "${actionModal?.team?.name}"?`
         }
-        confirmText={actionModal?.type === 'ban' ? 'Yes, Ban' : 'Yes, Remove'}
+        confirmText={actionModal?.type === 'ban' ? 'Yes, Ban' : actionModal?.type === 'remove' ? 'Yes, Remove' : 'Yes, Delete'}
         isDestructive={true}
         onConfirm={handleConfirmAction}
         onCancel={() => setActionModal(null)}

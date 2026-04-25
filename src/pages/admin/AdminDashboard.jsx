@@ -124,7 +124,7 @@ export default function AdminDashboard() {
                       {formatDateTime(event.dateTime)}
                     </p>
                     <p className="text-xs text-text-secondary">
-                      {event.registeredCount || 0} / {event.maxParticipants} registered
+                      {event.isTeamEvent ? (event.registeredTeamsCount || 0) : (event.registeredCount || 0)} / {event.isTeamEvent ? event.maxTeams : event.maxParticipants} {event.isTeamEvent ? 'teams' : 'registered'}
                     </p>
                   </div>
 
