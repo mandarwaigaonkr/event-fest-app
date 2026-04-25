@@ -11,6 +11,7 @@ import { formatDateTime } from '../../utils/formatters'
 import LoadingSpinner from '../../components/LoadingSpinner'
 import ConfirmModal from '../../components/ConfirmModal'
 import TeamRegistrationModal from '../../components/TeamRegistrationModal'
+import TeamInfoPanel from '../../components/TeamInfoPanel'
 import {
   ArrowLeftIcon,
   CalendarIcon,
@@ -324,6 +325,11 @@ export default function EventDetails() {
             </button>
           )}
         </div>
+
+        {/* My Team Panel */}
+        {event.isTeamEvent && (isRegistered || isWaitlisted) && (
+          <TeamInfoPanel eventId={eventId} userId={user?.uid} />
+        )}
       </div>
 
       <ConfirmModal

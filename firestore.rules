@@ -41,5 +41,11 @@ service cloud.firestore {
         allow delete: if isAdmin();
       }
     }
+
+    // Collection group rule for teams — needed for Dashboard invite notifications
+    // This allows querying teams across all events where user is invited/member
+    match /{path=**}/teams/{teamId} {
+      allow read: if isAdmin() || (isSignedIn() && (request.auth.uid in resource.data.invitedUids || request.auth.uid in resource.data.memberUids));
+    }
   }
 }

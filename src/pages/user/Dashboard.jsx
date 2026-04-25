@@ -1,13 +1,17 @@
 // src/pages/user/Dashboard.jsx
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
+import { collectionGroup, query, where, onSnapshot } from 'firebase/firestore'
+import { db } from '../../firebase'
 import { useAuth } from '../../hooks/useAuth'
 import { useEvents, useUserRegistrations, registerForEvent, unregisterFromEvent } from '../../hooks/useEvents'
 import { useTheme } from '../../context/ThemeContext'
 import EventCard from '../../components/EventCard'
 import Navbar from '../../components/Navbar'
-import { MagnifyingGlassIcon, SunIcon, MoonIcon } from '@heroicons/react/24/outline'
+import { MagnifyingGlassIcon, SunIcon, MoonIcon, UserGroupIcon } from '@heroicons/react/24/outline'
 
 export default function Dashboard() {
+  const navigate = useNavigate()
   const { user, profile } = useAuth()
   const { events, loading: eventsLoading } = useEvents()
   const { registeredEventIds, waitlistedEventIds, registrations, loading: regsLoading } = useUserRegistrations()
@@ -15,6 +19,34 @@ export default function Dashboard() {
   const [search, setSearch] = useState('')
   const [activeTab, setActiveTab] = useState('upcoming')
   const [registeringId, setRegisteringId] = useState(null)
+  const [pendingInvites, setPendingInvites] = useState([])
+
+  // Listen for pending team invites across all events
+  useEffect(() => {
+    if (!user) return
+
+    const q = query(
+      collectionGroup(db, 'teams'),
+      where('invitedUids', 'array-contains', user.uid)
+    )
+
+    const unsub = onSnapshot(q, (snap) => {
+      const invites = []
+      snap.docs.forEach(doc => {
+        const data = { id: doc.id, ...doc.data() }
+        // Only show if user's status is still 'pending'
+        const myMember = data.members?.find(m => m.uid === user.uid)
+        if (myMember?.status === 'pending' && data.status !== 'cancelled') {
+          // Extract eventId from the document reference path: events/{eventId}/teams/{teamId}
+          const eventId = doc.ref.parent.parent.id
+          invites.push({ ...data, eventId })
+        }
+      })
+      setPendingInvites(invites)
+    })
+
+    return unsub
+  }, [user])
 
   const loading = eventsLoading || regsLoading
   const activeEvents = events.filter(e => e.status === 'active')
@@ -126,6 +158,37 @@ export default function Dashboard() {
 
       {/* Content */}
       <div className="max-w-lg mx-auto px-4 pt-4">
+        {/* Pending Team Invites */}
+        {pendingInvites.length > 0 && (
+          <div className="flex flex-col gap-3 mb-4">
+            {pendingInvites.map(invite => {
+              const leaderName = invite.members?.find(m => m.uid === invite.leaderUid)?.name || 'Someone'
+              const eventName = events.find(e => e.id === invite.eventId)?.name || 'an event'
+              return (
+                <div
+                  key={invite.id}
+                  onClick={() => navigate(`/event/${invite.eventId}`)}
+                  className="bg-accent/10 border border-accent/20 rounded-2xl p-4 cursor-pointer hover:bg-accent/15 transition-colors animate-fade-up"
+                >
+                  <div className="flex items-start gap-3">
+                    <div className="w-10 h-10 rounded-xl bg-accent/20 flex items-center justify-center shrink-0 mt-0.5">
+                      <UserGroupIcon className="w-5 h-5 text-accent" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-semibold text-text-primary">
+                        Team Invite: "{invite.name}"
+                      </p>
+                      <p className="text-xs text-text-secondary mt-0.5">
+                        <span className="font-medium">{leaderName}</span> invited you to join for <span className="font-medium">{eventName}</span>
+                      </p>
+                      <p className="text-[11px] text-accent font-medium mt-1.5">Tap to view & respond →</p>
+                    </div>
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+        )}
         {loading ? (
           <div className="flex flex-col gap-4">
             {[1, 2, 3].map(i => (
