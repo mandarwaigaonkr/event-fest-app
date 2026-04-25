@@ -44,6 +44,12 @@ export default {
         'glow': '0 0 20px var(--color-accent-glow)',
         'glow-sm': '0 0 10px var(--color-accent-dim)',
       },
+      height: {
+        screen: '100dvh',
+      },
+      minHeight: {
+        screen: '100dvh',
+      },
     },
   },
   plugins: [],

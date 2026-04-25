@@ -60,10 +60,27 @@ body {
   background-color: var(--color-bg-base);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  
+  /* Mobile app scrolling fixes */
+  overscroll-behavior-y: none;
+  -webkit-tap-highlight-color: transparent;
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+html {
+  overscroll-behavior-y: none;
+}
+
+/* Allow text selection in inputs */
+input, textarea {
+  -webkit-user-select: auto;
+  user-select: auto;
 }
 
 #root {
-  min-height: 100vh;
+  min-height: 100dvh;
 }
 
 /* Scrollbar */
