@@ -2,14 +2,16 @@
 // Shows the user's team info inside the EventDetails page
 
 import { useState, useEffect } from 'react'
-import { doc, onSnapshot, collection, query, where } from 'firebase/firestore'
+import { onSnapshot, collection, query, where } from 'firebase/firestore'
 import { db } from '../firebase'
+import { inviteTeamMember } from '../hooks/useEvents'
 import {
   UserGroupIcon,
   CheckCircleIcon,
   ClockIcon,
   XCircleIcon,
   ArrowRightEndOnRectangleIcon,
+  UserPlusIcon,
 } from '@heroicons/react/24/outline'
 
 const STATUS_CONFIG = {
@@ -20,9 +22,12 @@ const STATUS_CONFIG = {
   left: { label: 'Left', icon: ArrowRightEndOnRectangleIcon, color: 'text-text-muted', bg: 'bg-bg-elevated' },
 }
 
-export default function TeamInfoPanel({ eventId, userId }) {
+export default function TeamInfoPanel({ eventId, userId, event }) {
   const [team, setTeam] = useState(null)
   const [loading, setLoading] = useState(true)
+  const [showInviteForm, setShowInviteForm] = useState(false)
+  const [inviteRegNumber, setInviteRegNumber] = useState('')
+  const [inviteLoading, setInviteLoading] = useState(false)
 
   useEffect(() => {
     if (!eventId || !userId) return
@@ -54,6 +59,20 @@ export default function TeamInfoPanel({ eventId, userId }) {
   const isLeader = team.leaderUid === userId
   const acceptedCount = team.members?.filter(m => m.status === 'accepted' || m.status === 'leader').length || 0
   const pendingCount = team.members?.filter(m => m.status === 'pending').length || 0
+  const activeMembers = team.members?.filter(m => !['rejected', 'left'].includes(m.status)) || []
+  const maxTeamSize = event?.maxTeamSize || team.members?.length || 0
+  const canInviteMore = isLeader && activeMembers.length < maxTeamSize && team.status !== 'cancelled'
+
+  async function handleInviteSubmit(e) {
+    e.preventDefault()
+    setInviteLoading(true)
+    const success = await inviteTeamMember(eventId, team.id, inviteRegNumber, userId)
+    if (success) {
+      setInviteRegNumber('')
+      setShowInviteForm(false)
+    }
+    setInviteLoading(false)
+  }
 
   return (
     <div className="bg-bg-card border border-bg-border rounded-2xl overflow-hidden shadow-lg mt-4 animate-fade-up">
@@ -97,14 +116,46 @@ export default function TeamInfoPanel({ eventId, userId }) {
           <p className="text-[10px] text-text-muted uppercase tracking-wide">Pending</p>
         </div>
         <div className="py-2.5 text-center">
-          <p className="text-base font-bold text-text-primary">{team.members?.length || 0}</p>
-          <p className="text-[10px] text-text-muted uppercase tracking-wide">Total</p>
+          <p className="text-base font-bold text-text-primary">{activeMembers.length}/{maxTeamSize}</p>
+          <p className="text-[10px] text-text-muted uppercase tracking-wide">Team Size</p>
         </div>
       </div>
 
       {/* Members List */}
       <div className="p-3">
-        <p className="text-[10px] uppercase tracking-wider font-semibold text-text-muted mb-2 px-1">Team Members</p>
+        <div className="flex items-center justify-between gap-2 mb-2 px-1">
+          <p className="text-[10px] uppercase tracking-wider font-semibold text-text-muted">Team Members</p>
+          {canInviteMore && (
+            <button
+              type="button"
+              onClick={() => setShowInviteForm(prev => !prev)}
+              className="inline-flex items-center gap-1 text-[11px] font-semibold text-accent hover:text-accent-light pressable"
+            >
+              <UserPlusIcon className="w-3.5 h-3.5" />
+              Invite
+            </button>
+          )}
+        </div>
+
+        {showInviteForm && canInviteMore && (
+          <form onSubmit={handleInviteSubmit} className="flex gap-2 mb-3 animate-fade-up">
+            <input
+              type="text"
+              value={inviteRegNumber}
+              onChange={(e) => setInviteRegNumber(e.target.value)}
+              placeholder="Registration number"
+              className="min-w-0 flex-1 h-10 px-3 rounded-xl bg-bg-elevated border border-bg-border text-sm text-text-primary placeholder-text-muted outline-none focus:border-accent transition-colors"
+            />
+            <button
+              type="submit"
+              disabled={inviteLoading}
+              className="h-10 px-3 rounded-xl bg-accent text-white text-xs font-semibold hover:bg-accent-light pressable disabled:opacity-50"
+            >
+              {inviteLoading ? 'Sending...' : 'Send'}
+            </button>
+          </form>
+        )}
+
         <div className="flex flex-col gap-1.5">
           {team.members?.map((member, idx) => {
             const config = STATUS_CONFIG[member.status] || STATUS_CONFIG.pending

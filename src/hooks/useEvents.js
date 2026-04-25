@@ -269,6 +269,26 @@ export async function createTeamRegistration(eventId, teamName, membersData, use
       const existingReg = await transaction.get(regRef)
       if (existingReg.exists()) throw new Error('You are already registered')
 
+      const invitedMembers = membersData.filter(member => member.uid !== userProfile.uid)
+      const invitedRegDocs = await Promise.all(
+        invitedMembers.map(member =>
+          transaction.get(doc(db, 'events', eventId, 'registrations', member.uid))
+        )
+      )
+
+      invitedRegDocs.forEach((regDoc, index) => {
+        if (!regDoc.exists()) return
+
+        const memberName = invitedMembers[index]?.name || 'This member'
+        const regData = regDoc.data()
+
+        if (regData.teamId) {
+          throw new Error(`${memberName} is already part of a team for this event`)
+        }
+
+        throw new Error(`${memberName} is already registered for this event`)
+      })
+
       const currentTeamsCount = eventData.registeredTeamsCount || 0
       const isWaitlisted = currentTeamsCount >= eventData.maxTeams
 
@@ -357,7 +377,12 @@ export async function respondToTeamInvite(eventId, teamId, userProfile, accept) 
       const eventData = eventDoc.data()
 
       const existingReg = await transaction.get(regRef)
-      if (existingReg.exists()) throw new Error('You are already registered for this event')
+      if (existingReg.exists()) {
+        throw new Error(existingReg.data().teamId
+          ? 'You are already part of a team for this event'
+          : 'You are already registered for this event'
+        )
+      }
 
       const isWaitlisted = teamData.isWaitlisted === true
 
@@ -406,6 +431,103 @@ export async function respondToTeamInvite(eventId, teamId, userProfile, accept) 
   } catch (err) {
     console.error('Invite response error:', err)
     toast.error(err.message || 'Failed to process invite.')
+    return false
+  }
+}
+
+/**
+ * Invite one more member to an existing team.
+ * Only the team leader can invite, and the invite cannot exceed maxTeamSize.
+ */
+export async function inviteTeamMember(eventId, teamId, regNumber, leaderUid) {
+  const cleanRegNumber = regNumber.trim()
+
+  if (!cleanRegNumber) {
+    toast.error('Enter a registration number')
+    return false
+  }
+
+  try {
+    const userQuery = query(collection(db, 'users'), where('regNumber', '==', cleanRegNumber), limit(1))
+    const userSnap = await getDocs(userQuery)
+
+    if (userSnap.empty) {
+      throw new Error(`Registration number ${cleanRegNumber} is not registered on the platform.`)
+    }
+
+    const invitee = userSnap.docs[0].data()
+    const eventRef = doc(db, 'events', eventId)
+    const teamRef = doc(db, 'events', eventId, 'teams', teamId)
+    const inviteeRegRef = doc(db, 'events', eventId, 'registrations', invitee.uid)
+
+    await runTransaction(db, async (transaction) => {
+      const [eventDoc, teamDoc, inviteeRegDoc] = await Promise.all([
+        transaction.get(eventRef),
+        transaction.get(teamRef),
+        transaction.get(inviteeRegRef),
+      ])
+
+      if (!eventDoc.exists()) throw new Error('Event not found')
+      if (!teamDoc.exists()) throw new Error('Team not found')
+
+      const eventData = eventDoc.data()
+      const teamData = teamDoc.data()
+
+      if (!eventData.isTeamEvent) throw new Error('Not a team event')
+      if (teamData.leaderUid !== leaderUid) throw new Error('Only the team leader can invite members')
+      if (teamData.status === 'cancelled') throw new Error('This team has been cancelled')
+      if (invitee.uid === leaderUid) throw new Error('You cannot invite yourself')
+      if (inviteeRegDoc.exists()) {
+        throw new Error(inviteeRegDoc.data().teamId
+          ? 'This member is already part of a team for this event'
+          : 'This member is already registered for this event'
+        )
+      }
+
+      const members = teamData.members || []
+      const activeMembers = members.filter(m => !['rejected', 'left'].includes(m.status))
+      const existingMember = members.find(m => m.uid === invitee.uid)
+
+      if (existingMember && existingMember.status !== 'rejected' && existingMember.status !== 'left') {
+        throw new Error('This user is already in your team or has a pending invite')
+      }
+
+      if (activeMembers.length >= eventData.maxTeamSize) {
+        throw new Error(`Your team already has the maximum ${eventData.maxTeamSize} members`)
+      }
+
+      const nextMembers = existingMember
+        ? members.map(m => m.uid === invitee.uid ? {
+            uid: invitee.uid,
+            regNumber: invitee.regNumber || cleanRegNumber,
+            name: invitee.name || 'Unknown',
+            status: 'pending',
+          } : m)
+        : [
+            ...members,
+            {
+              uid: invitee.uid,
+              regNumber: invitee.regNumber || cleanRegNumber,
+              name: invitee.name || 'Unknown',
+              status: 'pending',
+            },
+          ]
+
+      const nextInvitedUids = Array.from(new Set([...(teamData.invitedUids || []), invitee.uid]))
+      const acceptedCount = nextMembers.filter(m => m.status === 'accepted' || m.status === 'leader').length
+
+      transaction.update(teamRef, {
+        members: nextMembers,
+        invitedUids: nextInvitedUids,
+        status: acceptedCount >= (eventData.minTeamSize || 1) ? 'valid' : 'incomplete',
+      })
+    })
+
+    toast.success('Invite sent')
+    return true
+  } catch (err) {
+    console.error('Team invite error:', err)
+    toast.error(err.message || 'Failed to send invite')
     return false
   }
 }

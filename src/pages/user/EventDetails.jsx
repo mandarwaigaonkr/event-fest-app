@@ -328,7 +328,7 @@ export default function EventDetails() {
 
         {/* My Team Panel */}
         {event.isTeamEvent && (isRegistered || isWaitlisted) && (
-          <TeamInfoPanel eventId={eventId} userId={user?.uid} />
+          <TeamInfoPanel eventId={eventId} userId={user?.uid} event={event} />
         )}
       </div>
 
