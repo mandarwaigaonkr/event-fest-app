@@ -106,7 +106,7 @@ service cloud.firestore {
       allow update: if isAdmin() || isUserCounterUpdateOnly();
 
       match /registrations/{uid} {
-        allow read: if isOwner(uid) || isAdmin();
+        allow read: if isSignedIn();
         allow create: if isSafeRegistrationCreate(uid);
         allow update: if isAdmin();
         allow delete: if isOwner(uid) || isAdmin();
