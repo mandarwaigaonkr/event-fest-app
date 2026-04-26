@@ -5,10 +5,10 @@ import { collectionGroup, query, where, onSnapshot } from 'firebase/firestore'
 import { db } from '../../firebase'
 import { useAuth } from '../../hooks/useAuth'
 import { useEvents, useUserRegistrations, registerForEvent, unregisterFromEvent } from '../../hooks/useEvents'
-import { useTheme } from '../../context/ThemeContext'
+
 import EventCard from '../../components/EventCard'
 import Navbar from '../../components/Navbar'
-import { MagnifyingGlassIcon, SunIcon, MoonIcon, UserGroupIcon } from '@heroicons/react/24/outline'
+import { MagnifyingGlassIcon, UserGroupIcon } from '@heroicons/react/24/outline'
 
 import christLogo from '../../assets/Christ complete logo.png'
 
@@ -16,8 +16,8 @@ export default function Dashboard() {
   const navigate = useNavigate()
   const { user, profile } = useAuth()
   const { events, loading: eventsLoading } = useEvents()
-  const { registeredEventIds, waitlistedEventIds, registrations, loading: regsLoading } = useUserRegistrations()
-  const { isDark, toggleTheme } = useTheme()
+  const { registeredEventIds, waitlistedEventIds, registrations, loading: regsLoading } = useUserRegistrations(events, eventsLoading)
+
   const [search, setSearch] = useState('')
   const [activeTab, setActiveTab] = useState('upcoming')
   const [registeringId, setRegisteringId] = useState(null)

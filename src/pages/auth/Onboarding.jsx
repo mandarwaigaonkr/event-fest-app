@@ -6,6 +6,7 @@ import { useNavigate } from 'react-router-dom'
 import { doc, setDoc, serverTimestamp } from 'firebase/firestore'
 import { db } from '../../firebase'
 import { useAuth } from '../../hooks/useAuth'
+import christLogo from '../../assets/Christ complete logo.png'
 
 const DEPARTMENT_OPTIONS = [
   'Computer Science',
@@ -61,7 +62,6 @@ export default function Onboarding() {
         regNumber: form.regNumber.trim(),
         class: form.class.trim().toUpperCase(),
         department: form.department,
-        role: 'user',
         onboarded: true,
         updatedAt: serverTimestamp(),
       }, { merge: true })
@@ -91,9 +91,7 @@ export default function Onboarding() {
 
         {/* Header */}
         <div className="mb-8">
-          <div className="w-10 h-10 rounded-xl bg-accent flex items-center justify-center mb-5 shadow-glow-sm">
-            <span className="text-white text-base font-bold">F</span>
-          </div>
+          <img src={christLogo} alt="Christ University" className="h-12 object-contain mb-5" />
           <h1 className="text-2xl font-bold text-text-primary">Complete your profile</h1>
           <p className="text-sm text-text-secondary mt-1.5">
             Hey {user?.displayName?.split(' ')[0]}! Just a few details to get you in.

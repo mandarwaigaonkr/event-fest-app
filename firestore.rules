@@ -53,7 +53,11 @@ service cloud.firestore {
          (request.resource.data[field] == counterValue(field) + 1 ||
           request.resource.data[field] == counterValue(field) - 1));
     }
-    function isUserCounterUpdateOnly() {
+    // Counter updates are only allowed when the user's registration state is
+    // CHANGING in the same transaction (creating or deleting their own registration).
+    // existsAfter() sees the state after all writes in the transaction complete,
+    // so exists() != existsAfter() proves a registration is being created or deleted.
+    function isUserCounterUpdateOnly(eventId) {
       return isSignedIn() &&
         request.resource.data.diff(resource.data).affectedKeys().hasOnly([
           'registeredCount',
@@ -64,32 +68,49 @@ service cloud.firestore {
         isValidCounterStep('registeredCount') &&
         isValidCounterStep('waitlistCount') &&
         isValidCounterStep('registeredTeamsCount') &&
-        isValidCounterStep('waitlistTeamsCount');
+        isValidCounterStep('waitlistTeamsCount') &&
+        (exists(/databases/$(database)/documents/events/$(eventId)/registrations/$(request.auth.uid)) !=
+         existsAfter(/databases/$(database)/documents/events/$(eventId)/registrations/$(request.auth.uid)));
     }
-    function isTeamUpdateFieldsOnly() {
-      return request.resource.data.diff(resource.data).affectedKeys().hasOnly([
-        'members',
-        'invitedUids',
-        'memberUids',
-        'status'
-      ]);
-    }
+
+    // Leader can update members, invitedUids, and status — but NOT memberUids.
+    // Status must be a valid value.
     function canLeaderManageTeam() {
       return isSignedIn() &&
         request.auth.uid == resource.data.leaderUid &&
-        isTeamUpdateFieldsOnly();
+        request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+          'members',
+          'invitedUids',
+          'status'
+        ]) &&
+        request.resource.data.status in ['incomplete', 'valid', 'cancelled'];
     }
+    // Invited user can respond (accept/decline). They remove themselves from
+    // invitedUids and may add to memberUids. Status must stay valid.
     function canInvitedUserRespondToTeam() {
       return isSignedIn() &&
         request.auth.uid in resource.data.invitedUids &&
         !(request.auth.uid in request.resource.data.invitedUids) &&
-        isTeamUpdateFieldsOnly();
+        request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+          'members',
+          'invitedUids',
+          'memberUids',
+          'status'
+        ]) &&
+        request.resource.data.status in ['incomplete', 'valid', 'cancelled'];
     }
+    // Member can leave. They remove themselves from memberUids.
     function canMemberLeaveTeam() {
       return isSignedIn() &&
         request.auth.uid in resource.data.memberUids &&
         !(request.auth.uid in request.resource.data.memberUids) &&
-        isTeamUpdateFieldsOnly();
+        request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+          'members',
+          'invitedUids',
+          'memberUids',
+          'status'
+        ]) &&
+        request.resource.data.status in ['incomplete', 'valid', 'cancelled'];
     }
 
     match /users/{uid} {
@@ -102,8 +123,9 @@ service cloud.firestore {
     match /events/{eventId} {
       allow read: if isSignedIn();
       allow create, delete: if isAdmin();
-      // Allow admins full update, allow users to update ONLY registeredCount, waitlistCount, registeredTeamsCount, waitlistTeamsCount
-      allow update: if isAdmin() || isUserCounterUpdateOnly();
+      // Allow admins full update; users can ONLY update counters AND only
+      // when their own registration is being created/deleted in the same transaction.
+      allow update: if isAdmin() || isUserCounterUpdateOnly(eventId);
 
       match /registrations/{uid} {
         allow read: if isSignedIn();

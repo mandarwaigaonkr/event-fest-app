@@ -49,11 +49,12 @@ export function useEvents() {
 }
 
 /**
- * Hook: Check which events the current user has registered for
+ * Hook: Check which events the current user has registered for.
+ * Uses a single collectionGroup query instead of N per-event listeners.
+ * Accepts events list from the caller to avoid creating a duplicate useEvents() listener.
  */
-export function useUserRegistrations() {
+export function useUserRegistrations(events = [], eventsLoading = false) {
   const { user } = useAuth()
-  const { events, loading: eventsLoading } = useEvents() // Use the events we already fetch
   const [registeredEventIds, setRegisteredEventIds] = useState(new Set())
   const [waitlistedEventIds, setWaitlistedEventIds] = useState(new Set())
   const [registrations, setRegistrations] = useState([])
@@ -68,89 +69,54 @@ export function useUserRegistrations() {
       return
     }
 
-    if (eventsLoading) {
-      // Don't set loading to false yet, wait for events to load
-      return
-    }
+    if (eventsLoading) return
 
-    if (events.length === 0) {
-      setRegisteredEventIds(new Set())
-      setWaitlistedEventIds(new Set())
-      setRegistrations([])
-      setLoading(false)
-      return
-    }
+    // Single listener across ALL registrations for this user
+    const q = query(
+      collectionGroup(db, 'registrations'),
+      where('uid', '==', user.uid)
+    )
 
-    let unsubs = []
-    let currentRegs = new Map()
-    let initialized = new Set()
-
-    const updateState = () => {
+    const unsub = onSnapshot(q, (snapshot) => {
       const regIds = new Set()
       const waitIds = new Set()
       const regList = []
 
-      currentRegs.forEach((regData, eventId) => {
-        if (!regData || regData.banned) return
-        
-        if (regData.status === 'waitlisted') waitIds.add(eventId)
+      snapshot.docs.forEach(docSnap => {
+        const data = docSnap.data()
+        if (data.banned) return
+
+        // Extract eventId from path: events/{eventId}/registrations/{uid}
+        const eventId = docSnap.ref.parent.parent.id
+
+        if (data.status === 'waitlisted') waitIds.add(eventId)
         else regIds.add(eventId)
 
         const eventData = events.find(e => e.id === eventId) || { id: eventId, eventId }
         regList.push({
-          ...regData,
+          ...data,
           eventId,
-          eventData
+          eventData,
         })
       })
 
-      // Sort registrations by event date (newest first or just based on event date)
-      // Since we just push them, they might be in random order depending on which map entry we iterate
-      // Let's sort them descending by registration date or event date
+      // Sort by event date descending
       regList.sort((a, b) => {
-        const dateA = a.eventData?.dateTime ? new Date(a.eventData.dateTime).getTime() : 0;
-        const dateB = b.eventData?.dateTime ? new Date(b.eventData.dateTime).getTime() : 0;
-        return dateB - dateA;
+        const dateA = a.eventData?.dateTime?.toDate?.() || new Date(0)
+        const dateB = b.eventData?.dateTime?.toDate?.() || new Date(0)
+        return dateB - dateA
       })
 
       setRegisteredEventIds(regIds)
       setWaitlistedEventIds(waitIds)
       setRegistrations(regList)
       setLoading(false)
-    }
-
-    // Attach a listener to the user's registration doc in each event
-    events.forEach(event => {
-      const regRef = doc(db, 'events', event.id, 'registrations', user.uid)
-      const unsub = onSnapshot(regRef, (snap) => {
-        if (snap.exists()) {
-          currentRegs.set(event.id, snap.data())
-        } else {
-          currentRegs.delete(event.id)
-        }
-        
-        if (!initialized.has(event.id)) {
-          initialized.add(event.id)
-        }
-        
-        if (initialized.size === events.length) {
-          updateState()
-        }
-      }, (err) => {
-        console.error(`Reg listener error for event ${event.id}:`, err)
-        if (!initialized.has(event.id)) {
-          initialized.add(event.id)
-        }
-        if (initialized.size === events.length) {
-          updateState()
-        }
-      })
-      unsubs.push(unsub)
+    }, (err) => {
+      console.error('User registrations listener error:', err)
+      setLoading(false)
     })
 
-    return () => {
-      unsubs.forEach(unsub => unsub())
-    }
+    return unsub
   }, [user, events, eventsLoading])
 
   return { registeredEventIds, waitlistedEventIds, registrations, loading }
