@@ -5,11 +5,39 @@ import {
   getRedirectResult,
   signInWithPopup,
   signInWithRedirect,
+  signOut,
 } from 'firebase/auth'
 import { doc, getDoc, setDoc, serverTimestamp } from 'firebase/firestore'
 import { auth, db, googleProvider } from '../../firebase'
 import { useAuth } from '../../hooks/useAuth'
 import christLogo from '../../assets/Christ complete logo.png'
+
+const ALLOWED_DOMAIN = 'christuniversity.in'
+
+/**
+ * Extract the registration number from a Christ University display name.
+ * Format: "MANDAR SACHIN WAIGAONKAR 2460476" → "2460476"
+ */
+function extractRegNumber(displayName) {
+  if (!displayName) return ''
+  const parts = displayName.trim().split(/\s+/)
+  const lastPart = parts[parts.length - 1]
+  return /^\d+$/.test(lastPart) ? lastPart : ''
+}
+
+/**
+ * Extract the clean name (without reg number) and title-case it.
+ * "MANDAR SACHIN WAIGAONKAR 2460476" → "Mandar Sachin Waigaonkar"
+ */
+function extractCleanName(displayName) {
+  if (!displayName) return displayName || ''
+  const parts = displayName.trim().split(/\s+/)
+  const lastPart = parts[parts.length - 1]
+  const nameParts = /^\d+$/.test(lastPart) ? parts.slice(0, -1) : parts
+  return nameParts
+    .map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase())
+    .join(' ')
+}
 
 function authErrorMessage(code) {
   switch (code) {
@@ -19,23 +47,33 @@ function authErrorMessage(code) {
       return 'Popup was blocked. Redirecting to Google sign-in...'
     case 'auth/unauthorized-domain':
       return 'This domain is not authorized in Firebase Auth.'
+    case 'auth/invalid-domain':
+      return 'Only Christ University email IDs (@christuniversity.in) are allowed.'
     default:
       return 'Sign-in failed. Please try again.'
   }
 }
 
-
-
 async function ensureUserProfile(firebaseUser, navigate) {
+  // Enforce Christ University email domain
+  if (!firebaseUser.email?.endsWith(ALLOWED_DOMAIN)) {
+    await signOut(auth)
+    throw { code: 'auth/invalid-domain' }
+  }
+
   const userRef = doc(db, 'users', firebaseUser.uid)
   const userSnap = await getDoc(userRef)
 
   if (!userSnap.exists()) {
+    const regNumber = extractRegNumber(firebaseUser.displayName)
+    const cleanName = extractCleanName(firebaseUser.displayName)
+
     await setDoc(userRef, {
       uid: firebaseUser.uid,
-      name: firebaseUser.displayName,
+      name: cleanName,
       email: firebaseUser.email,
       photoURL: firebaseUser.photoURL,
+      regNumber,
       role: 'user',
       onboarded: false,
       createdAt: serverTimestamp(),
@@ -165,7 +203,7 @@ export default function Login() {
             <path strokeLinecap="round" strokeLinejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
           </svg>
           <span className="text-[11px] font-semibold text-text-secondary">
-            Use your Christ email ID
+            Use your Christ University email ID
           </span>
         </div>
 

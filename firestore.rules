@@ -15,7 +15,8 @@ service cloud.firestore {
     function isSafeUserCreate(uid) {
       return isOwner(uid) &&
         request.resource.data.uid == uid &&
-        request.resource.data.role == 'user';
+        request.resource.data.role == 'user' &&
+        request.auth.token.email.matches('.*christuniversity\\.in');
     }
     function isSafeUserUpdate(uid) {
       return isOwner(uid) &&

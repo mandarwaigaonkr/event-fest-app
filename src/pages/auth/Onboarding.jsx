@@ -1,7 +1,7 @@
 // src/pages/auth/Onboarding.jsx
-// Profile completion — regNumber, class string (e.g. "2BTCS A"), department
+// Profile completion — auto-detected regNumber (read-only), class, department
 
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { doc, setDoc, serverTimestamp } from 'firebase/firestore'
 import { db } from '../../firebase'
@@ -19,12 +19,28 @@ const DEPARTMENT_OPTIONS = [
   'MBA',
 ]
 
+/**
+ * Extract the registration number from the Google display name.
+ * "MANDAR SACHIN WAIGAONKAR 2460476" → "2460476"
+ */
+function extractRegNumber(displayName) {
+  if (!displayName) return ''
+  const parts = displayName.trim().split(/\s+/)
+  const lastPart = parts[parts.length - 1]
+  return /^\d+$/.test(lastPart) ? lastPart : ''
+}
+
 export default function Onboarding() {
-  const { user } = useAuth()
+  const { user, profile } = useAuth()
   const navigate = useNavigate()
 
+  // Auto-detect reg number — prefer what's already in Firestore (set during ensureUserProfile),
+  // fall back to extracting from displayName
+  const regNumber = useMemo(() => {
+    return profile?.regNumber || extractRegNumber(user?.displayName) || ''
+  }, [profile, user])
+
   const [form, setForm] = useState({
-    regNumber: '',
     class: '',      // free text e.g. "2BTCS A", "4BTCS IOT"
     department: '',
   })
@@ -33,7 +49,7 @@ export default function Onboarding() {
 
   function validate() {
     const e = {}
-    if (!form.regNumber.trim()) e.regNumber = 'Registration number is required'
+    if (!regNumber) e.regNumber = 'Could not detect registration number. Contact admin.'
     if (!form.class.trim()) e.class = 'Class is required (e.g. 2BTCS A)'
     if (!form.department) e.department = 'Please select your department'
     return e
@@ -59,7 +75,7 @@ export default function Onboarding() {
         name: user.displayName,
         email: user.email,
         photoURL: user.photoURL,
-        regNumber: form.regNumber.trim(),
+        regNumber,
         class: form.class.trim().toUpperCase(),
         department: form.department,
         onboarded: true,
@@ -78,6 +94,7 @@ export default function Onboarding() {
   const inputBase = 'w-full h-12 px-4 rounded-xl border bg-bg-elevated text-sm text-text-primary placeholder-text-muted outline-none transition-all duration-200'
   const inputNormal = `${inputBase} border-bg-border focus:border-accent`
   const inputError = `${inputBase} border-danger/60 focus:border-danger`
+  const inputReadOnly = `${inputBase} border-bg-border bg-bg-base text-text-muted cursor-not-allowed`
 
   return (
     <div className="min-h-screen bg-bg-base flex flex-col items-center justify-center px-4 py-10">
@@ -100,22 +117,26 @@ export default function Onboarding() {
 
         <form onSubmit={handleSubmit} className="flex flex-col gap-5">
 
-          {/* Registration Number */}
+          {/* Registration Number — Auto-detected, Read-only */}
           <div>
             <label className="block text-xs font-semibold text-text-secondary mb-2 tracking-wide uppercase">
-              Registration Number <span className="text-danger">*</span>
+              Registration Number
             </label>
             <input
               id="regNumber"
-              name="regNumber"
               type="text"
-              value={form.regNumber}
-              onChange={handleChange}
-              placeholder="e.g. 2460476"
-              className={errors.regNumber ? inputError : inputNormal}
+              value={regNumber}
+              readOnly
+              className={inputReadOnly}
             />
+            <p className="text-xs text-text-muted mt-1.5 flex items-center gap-1">
+              <svg className="w-3 h-3 text-success shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+              </svg>
+              Auto-detected from your Christ email
+            </p>
             {errors.regNumber && (
-              <p className="text-xs text-danger mt-1.5">{errors.regNumber}</p>
+              <p className="text-xs text-danger mt-1">{errors.regNumber}</p>
             )}
           </div>
 
