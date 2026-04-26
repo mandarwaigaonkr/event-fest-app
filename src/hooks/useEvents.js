@@ -53,14 +53,27 @@ export function useEvents() {
  */
 export function useUserRegistrations() {
   const { user } = useAuth()
-  const { events } = useEvents() // Use the events we already fetch
+  const { events, loading: eventsLoading } = useEvents() // Use the events we already fetch
   const [registeredEventIds, setRegisteredEventIds] = useState(new Set())
   const [waitlistedEventIds, setWaitlistedEventIds] = useState(new Set())
   const [registrations, setRegistrations] = useState([])
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    if (!user || events.length === 0) {
+    if (!user) {
+      setRegisteredEventIds(new Set())
+      setWaitlistedEventIds(new Set())
+      setRegistrations([])
+      setLoading(false)
+      return
+    }
+
+    if (eventsLoading) {
+      // Don't set loading to false yet, wait for events to load
+      return
+    }
+
+    if (events.length === 0) {
       setRegisteredEventIds(new Set())
       setWaitlistedEventIds(new Set())
       setRegistrations([])
@@ -70,6 +83,7 @@ export function useUserRegistrations() {
 
     let unsubs = []
     let currentRegs = new Map()
+    let initialized = new Set()
 
     const updateState = () => {
       const regIds = new Set()
@@ -90,6 +104,15 @@ export function useUserRegistrations() {
         })
       })
 
+      // Sort registrations by event date (newest first or just based on event date)
+      // Since we just push them, they might be in random order depending on which map entry we iterate
+      // Let's sort them descending by registration date or event date
+      regList.sort((a, b) => {
+        const dateA = a.eventData?.dateTime ? new Date(a.eventData.dateTime).getTime() : 0;
+        const dateB = b.eventData?.dateTime ? new Date(b.eventData.dateTime).getTime() : 0;
+        return dateB - dateA;
+      })
+
       setRegisteredEventIds(regIds)
       setWaitlistedEventIds(waitIds)
       setRegistrations(regList)
@@ -105,9 +128,22 @@ export function useUserRegistrations() {
         } else {
           currentRegs.delete(event.id)
         }
-        updateState()
+        
+        if (!initialized.has(event.id)) {
+          initialized.add(event.id)
+        }
+        
+        if (initialized.size === events.length) {
+          updateState()
+        }
       }, (err) => {
         console.error(`Reg listener error for event ${event.id}:`, err)
+        if (!initialized.has(event.id)) {
+          initialized.add(event.id)
+        }
+        if (initialized.size === events.length) {
+          updateState()
+        }
       })
       unsubs.push(unsub)
     })
@@ -115,7 +151,7 @@ export function useUserRegistrations() {
     return () => {
       unsubs.forEach(unsub => unsub())
     }
-  }, [user, events])
+  }, [user, events, eventsLoading])
 
   return { registeredEventIds, waitlistedEventIds, registrations, loading }
 }

@@ -93,7 +93,10 @@ export default function Dashboard() {
       <div className="sticky top-0 z-40 bg-bg-base/95 backdrop-blur-md border-b border-bg-border">
         <div className="max-w-lg mx-auto px-4 pt-5 pb-3">
           <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center gap-3">
+            <div 
+              className="flex items-center gap-3 cursor-pointer pressable"
+              onClick={() => navigate('/profile')}
+            >
               {user?.photoURL ? (
                 <img src={user.photoURL} alt="" className="w-9 h-9 rounded-full" />
               ) : (
