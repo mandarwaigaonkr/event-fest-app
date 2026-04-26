@@ -7,6 +7,7 @@ import { collection, addDoc, serverTimestamp, Timestamp } from 'firebase/firesto
 import { db } from '../../firebase'
 import { useAuth } from '../../hooks/useAuth'
 import Navbar from '../../components/Navbar'
+import { DatePicker, TimePicker } from '../../components/DateTimePicker'
 import toast from 'react-hot-toast'
 import { ArrowLeftIcon, PhotoIcon } from '@heroicons/react/24/outline'
 
@@ -151,34 +152,24 @@ export default function CreateEvent() {
             />
           </div>
 
-          {/* Date & Time Row */}
+          {/* Date & Time */}
           <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label className="block text-xs font-semibold text-text-secondary mb-2 uppercase tracking-wide">
-                Date <span className="text-danger">*</span>
-              </label>
-              <input
-                name="date"
-                type="date"
-                value={form.date}
-                onChange={handleChange}
-                className={errors.date ? inputError : inputNormal}
-              />
-              {errors.date && <p className="text-xs text-danger mt-1.5">{errors.date}</p>}
-            </div>
-            <div>
-              <label className="block text-xs font-semibold text-text-secondary mb-2 uppercase tracking-wide">
-                Time <span className="text-danger">*</span>
-              </label>
-              <input
-                name="time"
-                type="time"
-                value={form.time}
-                onChange={handleChange}
-                className={errors.time ? inputError : inputNormal}
-              />
-              {errors.time && <p className="text-xs text-danger mt-1.5">{errors.time}</p>}
-            </div>
+            <DatePicker
+              date={form.date}
+              onChange={(val) => {
+                setForm(prev => ({ ...prev, date: val }))
+                setErrors(prev => ({ ...prev, date: '' }))
+              }}
+              error={errors.date}
+            />
+            <TimePicker
+              time={form.time}
+              onChange={(val) => {
+                setForm(prev => ({ ...prev, time: val }))
+                setErrors(prev => ({ ...prev, time: '' }))
+              }}
+              error={errors.time}
+            />
           </div>
 
           {/* Venue */}

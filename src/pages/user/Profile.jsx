@@ -17,6 +17,8 @@ import {
   IdentificationIcon,
   EnvelopeIcon,
   ShieldCheckIcon,
+  Cog6ToothIcon,
+  ChevronRightIcon,
 } from '@heroicons/react/24/outline'
 
 export default function Profile() {
@@ -79,6 +81,23 @@ export default function Profile() {
             <ProfileRow icon={<EnvelopeIcon className="w-4 h-4" />} label="Email" value={user?.email || '—'} />
           </div>
         </div>
+
+        {/* Admin Panel Entry — only visible to admins */}
+        {isAdmin && (
+          <button
+            onClick={() => navigate('/admin')}
+            className="w-full bg-gradient-to-r from-accent/10 to-accent/5 border border-accent/20 rounded-2xl p-4 flex items-center gap-3 hover:from-accent/15 hover:to-accent/10 pressable group"
+          >
+            <div className="w-10 h-10 rounded-xl bg-accent/15 flex items-center justify-center shrink-0">
+              <ShieldCheckIcon className="w-5 h-5 text-accent" />
+            </div>
+            <div className="flex-1 text-left">
+              <p className="text-sm font-semibold text-text-primary">Admin Panel</p>
+              <p className="text-[11px] text-text-muted">Create & manage events</p>
+            </div>
+            <ChevronRightIcon className="w-4 h-4 text-accent group-hover:translate-x-0.5 transition-transform" />
+          </button>
+        )}
 
         {/* Settings */}
         <div className="bg-bg-card border border-bg-border rounded-2xl overflow-hidden">

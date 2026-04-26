@@ -5,7 +5,6 @@ import { useNavigate } from 'react-router-dom'
 import { useEvents } from '../../hooks/useEvents'
 import { doc, updateDoc } from 'firebase/firestore'
 import { db } from '../../firebase'
-import Navbar from '../../components/Navbar'
 import { formatDateTime } from '../../utils/formatters'
 import toast from 'react-hot-toast'
 import {
@@ -17,6 +16,7 @@ import {
   ChartBarIcon,
   CheckBadgeIcon,
   XCircleIcon,
+  ArrowLeftIcon,
 } from '@heroicons/react/24/outline'
 
 import christLogo from '../../assets/Christ complete logo.png'
@@ -43,10 +43,17 @@ export default function AdminDashboard() {
       {/* Header */}
       <div className="sticky top-0 z-40 bg-bg-base/80 backdrop-blur-xl border-b border-bg-border/50">
         <div className="max-w-lg mx-auto px-4 pt-5 pb-4">
+          <button
+            onClick={() => navigate('/profile')}
+            className="flex items-center gap-1.5 text-xs font-medium text-accent mb-3 pressable hover:text-accent-light"
+          >
+            <ArrowLeftIcon className="w-3.5 h-3.5" />
+            Back to App
+          </button>
           <div className="flex items-center justify-between mb-1">
             <div>
-              <h1 className="text-lg font-bold text-text-primary leading-tight">Admin Dashboard</h1>
-              <p className="text-xs text-text-muted mt-0.5">Manage events and participants</p>
+              <h1 className="text-lg font-bold text-text-primary leading-tight">Admin Panel</h1>
+              <p className="text-xs text-text-muted mt-0.5">Create & manage events</p>
             </div>
             <img src={christLogo} alt="Christ Logo" className="h-9 object-contain" />
           </div>
@@ -166,7 +173,6 @@ export default function AdminDashboard() {
         </div>
       </div>
 
-      <Navbar />
     </div>
   )
 }
