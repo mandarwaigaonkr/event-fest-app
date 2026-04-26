@@ -1,55 +1,66 @@
 // src/App.jsx — Root component with React Router v6 routing
+// Route-level code splitting with React.lazy for smaller initial bundle
 
+import { lazy, Suspense } from 'react'
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { Toaster } from 'react-hot-toast'
 import AuthProvider from './context/AuthContext'
 import EventsProvider from './context/EventsContext'
+import { ThemeProvider } from './context/ThemeContext'
 
-// Route guards
+// Route guards (small — kept eager)
 import ProtectedRoute from './components/ProtectedRoute'
 import AdminRoute from './components/AdminRoute'
 
-// Auth pages
-import Login from './pages/auth/Login'
-import Onboarding from './pages/auth/Onboarding'
+// Inline spinner — avoids importing a component for the fallback
+function RouteFallback() {
+  return (
+    <div className="min-h-screen bg-bg-base flex items-center justify-center">
+      <div className="w-9 h-9 border-2 border-bg-border border-t-accent rounded-full animate-spin" />
+    </div>
+  )
+}
+
+// Auth pages (rarely visited after first login)
+const Login = lazy(() => import('./pages/auth/Login'))
+const Onboarding = lazy(() => import('./pages/auth/Onboarding'))
 
 // User pages
-import Dashboard from './pages/user/Dashboard'
-import MyEvents from './pages/user/MyEvents'
-import EventDetails from './pages/user/EventDetails'
-import Profile from './pages/user/Profile'
+const Dashboard = lazy(() => import('./pages/user/Dashboard'))
+const MyEvents = lazy(() => import('./pages/user/MyEvents'))
+const EventDetails = lazy(() => import('./pages/user/EventDetails'))
+const Profile = lazy(() => import('./pages/user/Profile'))
 
-// Admin pages
-import AdminDashboard from './pages/admin/AdminDashboard'
-import CreateEvent from './pages/admin/CreateEvent'
-import EditEvent from './pages/admin/EditEvent'
-import EventParticipants from './pages/admin/EventParticipants'
-import TakeAttendance from './pages/admin/TakeAttendance'
-
-import { ThemeProvider } from './context/ThemeContext'
+// Admin pages (only 1-2 users ever access these)
+const AdminDashboard = lazy(() => import('./pages/admin/AdminDashboard'))
+const CreateEvent = lazy(() => import('./pages/admin/CreateEvent'))
+const EditEvent = lazy(() => import('./pages/admin/EditEvent'))
+const EventParticipants = lazy(() => import('./pages/admin/EventParticipants'))
+const TakeAttendance = lazy(() => import('./pages/admin/TakeAttendance'))
 
 export default function App() {
   return (
     <ThemeProvider>
-      <BrowserRouter>
-        <AuthProvider>
-          {/* Global toast notifications */}
-          <Toaster
-            position="bottom-center"
-            toastOptions={{
-              duration: 3000,
-              style: {
-                borderRadius: '10px',
-                fontSize: '14px',
-                background: 'var(--color-bg-card)',
-                color: 'var(--color-text-primary)',
-                border: '1px solid var(--color-bg-border)',
-              },
-            }}
-          />
+    <BrowserRouter>
+      <AuthProvider>
+        {/* Global toast notifications */}
+        <Toaster
+          position="bottom-center"
+          toastOptions={{
+            duration: 3000,
+            style: {
+              borderRadius: '10px',
+              fontSize: '14px',
+              background: 'var(--color-bg-card)',
+              color: 'var(--color-text-primary)',
+              border: '1px solid var(--color-bg-border)',
+            },
+          }}
+        />
 
-          <EventsProvider>
-          <Routes>
+        <EventsProvider>
+        <Suspense fallback={<RouteFallback />}>
+        <Routes>
           {/* Public routes */}
           <Route path="/login" element={<Login />} />
 
@@ -91,7 +102,8 @@ export default function App() {
           <Route path="/" element={<Navigate to="/dashboard" replace />} />
           <Route path="*" element={<Navigate to="/dashboard" replace />} />
         </Routes>
-          </EventsProvider>
+        </Suspense>
+        </EventsProvider>
       </AuthProvider>
     </BrowserRouter>
     </ThemeProvider>

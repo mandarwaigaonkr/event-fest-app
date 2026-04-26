@@ -10,34 +10,12 @@ import {
 import { doc, getDoc, setDoc, serverTimestamp } from 'firebase/firestore'
 import { auth, db, googleProvider } from '../../firebase'
 import { useAuth } from '../../hooks/useAuth'
+import { extractRegNumber, extractCleanName } from '../../utils/formatters'
 import christLogo from '../../assets/Christ complete logo.png'
 
 const ALLOWED_DOMAIN = 'christuniversity.in'
 
-/**
- * Extract the registration number from a Christ University display name.
- * Format: "MANDAR SACHIN WAIGAONKAR 2460476" → "2460476"
- */
-function extractRegNumber(displayName) {
-  if (!displayName) return ''
-  const parts = displayName.trim().split(/\s+/)
-  const lastPart = parts[parts.length - 1]
-  return /^\d+$/.test(lastPart) ? lastPart : ''
-}
 
-/**
- * Extract the clean name (without reg number) and title-case it.
- * "MANDAR SACHIN WAIGAONKAR 2460476" → "Mandar Sachin Waigaonkar"
- */
-function extractCleanName(displayName) {
-  if (!displayName) return displayName || ''
-  const parts = displayName.trim().split(/\s+/)
-  const lastPart = parts[parts.length - 1]
-  const nameParts = /^\d+$/.test(lastPart) ? parts.slice(0, -1) : parts
-  return nameParts
-    .map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase())
-    .join(' ')
-}
 
 function authErrorMessage(code) {
   switch (code) {

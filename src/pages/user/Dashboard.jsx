@@ -1,8 +1,6 @@
 // src/pages/user/Dashboard.jsx
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { collectionGroup, query, where, onSnapshot } from 'firebase/firestore'
-import { db } from '../../firebase'
 import { useAuth } from '../../hooks/useAuth'
 import { useEventsContext } from '../../context/EventsContext'
 import { registerForEvent, unregisterFromEvent } from '../../hooks/useEvents'
@@ -16,39 +14,11 @@ import christLogo from '../../assets/Christ complete logo.png'
 export default function Dashboard() {
   const navigate = useNavigate()
   const { user, profile } = useAuth()
-  const { events, eventsLoading, registeredEventIds, waitlistedEventIds, registrations, regsLoading } = useEventsContext()
+  const { events, eventsLoading, registeredEventIds, waitlistedEventIds, registrations, regsLoading, pendingInvites } = useEventsContext()
 
   const [search, setSearch] = useState('')
   const [activeTab, setActiveTab] = useState('upcoming')
   const [registeringId, setRegisteringId] = useState(null)
-  const [pendingInvites, setPendingInvites] = useState([])
-
-  // Listen for pending team invites across all events
-  useEffect(() => {
-    if (!user) return
-
-    const q = query(
-      collectionGroup(db, 'teams'),
-      where('invitedUids', 'array-contains', user.uid)
-    )
-
-    const unsub = onSnapshot(q, (snap) => {
-      const invites = []
-      snap.docs.forEach(doc => {
-        const data = { id: doc.id, ...doc.data() }
-        // Only show if user's status is still 'pending'
-        const myMember = data.members?.find(m => m.uid === user.uid)
-        if (myMember?.status === 'pending' && data.status !== 'cancelled') {
-          // Extract eventId from the document reference path: events/{eventId}/teams/{teamId}
-          const eventId = doc.ref.parent.parent.id
-          invites.push({ ...data, eventId })
-        }
-      })
-      setPendingInvites(invites)
-    })
-
-    return unsub
-  }, [user])
 
   const loading = eventsLoading || regsLoading
   const activeEvents = events.filter(e => e.status === 'active')

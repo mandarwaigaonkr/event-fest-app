@@ -1,13 +1,15 @@
 // src/pages/user/EventDetails.jsx
 // Full event details page — poster, description, venue, register button
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { doc, onSnapshot, collection, query, where } from 'firebase/firestore'
 import { db } from '../../firebase'
 import { useAuth } from '../../hooks/useAuth'
+import { useEventsContext } from '../../context/EventsContext'
 import { registerForEvent, unregisterFromEvent, respondToTeamInvite } from '../../hooks/useEvents'
 import { formatDateTime } from '../../utils/formatters'
+import { GRADIENT_FALLBACKS } from '../../utils/constants'
 import LoadingSpinner from '../../components/LoadingSpinner'
 import ConfirmModal from '../../components/ConfirmModal'
 import TeamRegistrationModal from '../../components/TeamRegistrationModal'
@@ -20,21 +22,18 @@ import {
   InformationCircleIcon,
 } from '@heroicons/react/24/outline'
 
-const GRADIENT_FALLBACKS = [
-  'from-indigo-500 to-purple-600',
-  'from-rose-500 to-orange-500',
-  'from-teal-500 to-cyan-500',
-  'from-violet-600 to-fuchsia-500',
-  'from-blue-600 to-cyan-500',
-]
-
 export default function EventDetails() {
   const { eventId } = useParams()
   const navigate = useNavigate()
   const { user, profile } = useAuth()
 
-  const [event, setEvent] = useState(null)
-  const [loading, setLoading] = useState(true)
+  // Read from shared context first — avoids a redundant listener
+  const { events, eventsLoading } = useEventsContext()
+  const contextEvent = useMemo(
+    () => events.find(e => e.id === eventId) || null,
+    [events, eventId]
+  )
+
   const [isRegistered, setIsRegistered] = useState(false)
   const [isWaitlisted, setIsWaitlisted] = useState(false)
   const [registering, setRegistering] = useState(false)
@@ -42,20 +41,28 @@ export default function EventDetails() {
   const [showTeamModal, setShowTeamModal] = useState(false)
   const [pendingInvite, setPendingInvite] = useState(null)
 
-  useEffect(() => {
-    if (!eventId) return
+  // Fallback: direct listener only if event not in context
+  const [fallbackEvent, setFallbackEvent] = useState(null)
+  const [fallbackLoading, setFallbackLoading] = useState(false)
 
+  useEffect(() => {
+    if (contextEvent || eventsLoading) return
+
+    setFallbackLoading(true)
     const unsub = onSnapshot(doc(db, 'events', eventId), (snap) => {
       if (snap.exists()) {
-        setEvent({ id: snap.id, eventId: snap.id, ...snap.data() })
+        setFallbackEvent({ id: snap.id, eventId: snap.id, ...snap.data() })
       } else {
-        setEvent(null)
+        setFallbackEvent(null)
       }
-      setLoading(false)
+      setFallbackLoading(false)
     })
 
     return unsub
-  }, [eventId])
+  }, [eventId, contextEvent, eventsLoading])
+
+  const event = contextEvent || fallbackEvent
+  const loading = eventsLoading || fallbackLoading
 
   // Check registration status
   useEffect(() => {

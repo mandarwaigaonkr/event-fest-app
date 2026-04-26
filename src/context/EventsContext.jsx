@@ -102,6 +102,36 @@ export default function EventsProvider({ children }) {
     return unsub
   }, [user, events, eventsLoading])
 
+  // ── Pending team invites (shared — survives tab switches) ──
+  const [pendingInvites, setPendingInvites] = useState([])
+
+  useEffect(() => {
+    if (!user) {
+      setPendingInvites([])
+      return
+    }
+
+    const q = query(
+      collectionGroup(db, 'teams'),
+      where('invitedUids', 'array-contains', user.uid)
+    )
+
+    const unsub = onSnapshot(q, (snap) => {
+      const invites = []
+      snap.docs.forEach(docSnap => {
+        const data = { id: docSnap.id, ...docSnap.data() }
+        const myMember = data.members?.find(m => m.uid === user.uid)
+        if (myMember?.status === 'pending' && data.status !== 'cancelled') {
+          const eventId = docSnap.ref.parent.parent.id
+          invites.push({ ...data, eventId })
+        }
+      })
+      setPendingInvites(invites)
+    })
+
+    return unsub
+  }, [user])
+
   return (
     <EventsContext.Provider value={{
       events,
@@ -110,6 +140,7 @@ export default function EventsProvider({ children }) {
       waitlistedEventIds,
       registrations,
       regsLoading,
+      pendingInvites,
     }}>
       {children}
     </EventsContext.Provider>

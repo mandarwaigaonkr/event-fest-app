@@ -7,7 +7,6 @@ import {
   doc,
   onSnapshot,
   collection,
-  getDocs,
   updateDoc,
   deleteDoc,
 } from 'firebase/firestore'
@@ -38,7 +37,7 @@ export default function EventParticipants() {
   const [teams, setTeams] = useState([])
   const [activeTab, setActiveTab] = useState('individuals') // 'individuals' | 'teams'
 
-  // Load event
+  // Load event (single listener)
   useEffect(() => {
     if (!eventId) return
     const unsub = onSnapshot(doc(db, 'events', eventId), (snap) => {
@@ -48,14 +47,12 @@ export default function EventParticipants() {
     return unsub
   }, [eventId])
 
-  // Load registrations
+  // Listen to registrations in real-time (replaces getDocs which re-read everything)
   useEffect(() => {
     if (!eventId) return
 
-    async function loadParticipants() {
-      const regsSnap = await getDocs(collection(db, 'events', eventId, 'registrations'))
-      const list = regsSnap.docs.map(d => ({ id: d.id, ...d.data() }))
-      // Sort by registration time
+    const unsub = onSnapshot(collection(db, 'events', eventId, 'registrations'), (snap) => {
+      const list = snap.docs.map(d => ({ id: d.id, ...d.data() }))
       list.sort((a, b) => {
         const aTime = a.registeredAt?.toDate?.() || new Date(0)
         const bTime = b.registeredAt?.toDate?.() || new Date(0)
@@ -63,14 +60,8 @@ export default function EventParticipants() {
       })
       setParticipants(list)
       setLoading(false)
-    }
-
-    loadParticipants()
-
-    // Re-fetch when event changes (registeredCount)
-    const unsub = onSnapshot(doc(db, 'events', eventId), () => {
-      loadParticipants()
     })
+
     return unsub
   }, [eventId])
 

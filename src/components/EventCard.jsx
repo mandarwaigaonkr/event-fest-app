@@ -1,24 +1,12 @@
 // src/components/EventCard.jsx
-import { useState } from 'react'
+import { useState, memo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { CalendarIcon, MapPinIcon, UsersIcon } from '@heroicons/react/24/outline'
 import { formatDateTime } from '../utils/formatters'
+import { getGradient } from '../utils/constants'
 import ConfirmModal from './ConfirmModal'
 
-const GRADIENT_FALLBACKS = [
-  'from-violet-500 to-purple-600',
-  'from-rose-500 to-pink-600',
-  'from-teal-500 to-emerald-600',
-  'from-amber-500 to-orange-600',
-  'from-blue-500 to-indigo-600',
-]
-
-function getGradient(eventId) {
-  const idx = eventId?.charCodeAt(0) % GRADIENT_FALLBACKS.length || 0
-  return GRADIENT_FALLBACKS[idx]
-}
-
-export default function EventCard({
+const EventCard = memo(function EventCard({
   event,
   isRegistered = false,
   isWaitlisted = false,
@@ -179,4 +167,6 @@ export default function EventCard({
       />
     </div>
   )
-}
+})
+
+export default EventCard

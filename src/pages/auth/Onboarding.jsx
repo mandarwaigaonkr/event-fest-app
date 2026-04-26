@@ -6,6 +6,7 @@ import { useNavigate } from 'react-router-dom'
 import { doc, setDoc, serverTimestamp } from 'firebase/firestore'
 import { db } from '../../firebase'
 import { useAuth } from '../../hooks/useAuth'
+import { extractRegNumber } from '../../utils/formatters'
 import christLogo from '../../assets/Christ complete logo.png'
 
 const DEPARTMENT_OPTIONS = [
@@ -19,16 +20,7 @@ const DEPARTMENT_OPTIONS = [
   'MBA',
 ]
 
-/**
- * Extract the registration number from the Google display name.
- * "MANDAR SACHIN WAIGAONKAR 2460476" → "2460476"
- */
-function extractRegNumber(displayName) {
-  if (!displayName) return ''
-  const parts = displayName.trim().split(/\s+/)
-  const lastPart = parts[parts.length - 1]
-  return /^\d+$/.test(lastPart) ? lastPart : ''
-}
+
 
 export default function Onboarding() {
   const { user, profile } = useAuth()
