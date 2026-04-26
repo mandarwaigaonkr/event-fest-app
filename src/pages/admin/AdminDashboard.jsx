@@ -43,11 +43,13 @@ export default function AdminDashboard() {
       {/* Header */}
       <div className="sticky top-0 z-40 bg-bg-base/80 backdrop-blur-xl border-b border-bg-border/50">
         <div className="max-w-lg mx-auto px-4 pt-5 pb-4">
-          <div className="flex items-center gap-2 mb-1">
-            <img src={christLogo} alt="Christ Logo" className="h-10 object-contain" />
-            <h1 className="text-xl font-bold text-text-primary">Admin Dashboard</h1>
+          <div className="flex items-center justify-between mb-1">
+            <div>
+              <h1 className="text-lg font-bold text-text-primary leading-tight">Admin Dashboard</h1>
+              <p className="text-xs text-text-muted mt-0.5">Manage events and participants</p>
+            </div>
+            <img src={christLogo} alt="Christ Logo" className="h-9 object-contain" />
           </div>
-          <p className="text-xs text-text-muted">Manage events and participants</p>
         </div>
       </div>
 

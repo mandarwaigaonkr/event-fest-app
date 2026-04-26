@@ -111,16 +111,29 @@ export default function Login() {
   }
 
   return (
-    <div className="min-h-screen bg-bg-base flex flex-col items-center justify-center px-6 py-safe">
-      <div className="w-full max-w-sm flex flex-col items-center animate-fade-up">
-        
-        {/* Logo mark */}
-        <img src={christLogo} alt="Christ Logo" className="w-[400px] h-[104px] object-contain mb-8" />
+    <div className="min-h-screen relative flex flex-col items-center justify-center px-6 py-safe bg-bg-base overflow-hidden">
+      
+      {/* Live Subtle Golden Background */}
+      <div className="absolute inset-0 z-0 pointer-events-none">
+        <div className="absolute bottom-0 inset-x-0 h-[60vh] bg-gradient-to-t from-[#fde68a]/10 dark:from-[#fde68a]/5 to-transparent" />
+        <div className="absolute -bottom-32 -left-32 w-[30rem] h-[30rem] bg-[#fcd34d]/10 dark:bg-[#fcd34d]/5 rounded-full blur-[100px] animate-[pulse_7s_ease-in-out_infinite]" />
+        <div className="absolute top-1/2 -right-32 w-[25rem] h-[25rem] bg-[#fbbf24]/10 dark:bg-[#fbbf24]/5 rounded-full blur-[100px] animate-[pulse_10s_ease-in-out_infinite_alternate]" />
+      </div>
 
-        <h1 className="text-2xl font-semibold text-text-primary tracking-tight">
-          Christ Event Manager
+      <div className="w-full max-w-sm flex flex-col items-center animate-fade-up relative z-10">
+        
+        {/* Logo */}
+        <img 
+          src={christLogo} 
+          alt="Christ Logo" 
+          className="w-[400px] h-[104px] object-contain mb-8 drop-shadow-sm" 
+        />
+
+        {/* Clean minimal flat layout */}
+        <h1 className="text-3xl font-bold text-text-primary tracking-tight">
+          Event Manager
         </h1>
-        <p className="text-sm text-text-secondary mt-1.5 text-center">
+        <p className="text-sm font-medium text-text-secondary mt-1 text-center">
           Your campus event companion
         </p>
 
@@ -129,13 +142,13 @@ export default function Login() {
           id="google-signin-btn"
           onClick={handleGoogleSignIn}
           disabled={loading}
-          className="w-full mt-10 h-12 bg-bg-card border border-bg-border rounded-xl flex items-center justify-center gap-3 text-sm font-medium text-text-primary hover:bg-bg-elevated active:scale-[0.98] transition-all duration-150 disabled:opacity-50"
+          className="w-full mt-10 h-14 bg-bg-card border border-bg-border rounded-[1rem] shadow-sm hover:shadow-md hover:-translate-y-0.5 flex items-center justify-center gap-3 text-[15px] font-semibold text-text-primary active:scale-[0.98] transition-all duration-300 disabled:opacity-50 disabled:hover:translate-y-0 disabled:hover:shadow-none"
         >
           {loading ? (
             <div className="w-5 h-5 border-2 border-text-muted border-t-accent rounded-full animate-spin" />
           ) : (
             <>
-              <svg className="w-[18px] h-[18px] shrink-0" viewBox="0 0 24 24">
+              <svg className="w-[20px] h-[20px] shrink-0" viewBox="0 0 24 24">
                 <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
                 <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
                 <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z"/>
@@ -146,15 +159,21 @@ export default function Login() {
           )}
         </button>
         
-        <p className="text-[13px] font-medium text-text-primary mt-4 text-center">
-          Note: Use Christ email ID.
-        </p>
+        {/* Minimal clean note box */}
+        <div className="mt-6 inline-flex px-4 py-1.5 bg-text-primary/[0.03] border border-text-primary/[0.06] rounded-full items-center justify-center gap-2">
+          <svg className="w-3.5 h-3.5 text-text-muted" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+          <span className="text-[11px] font-semibold text-text-secondary">
+            Use your Christ email ID
+          </span>
+        </div>
 
         {error && (
-          <p className="text-xs text-danger text-center mt-3">{error}</p>
+          <p className="text-xs text-danger text-center mt-4">{error}</p>
         )}
 
-        <p className="text-[11px] text-text-muted mt-8 text-center">
+        <p className="text-[12px] font-medium text-text-muted mt-12 text-center opacity-60">
           By continuing, you agree to our Terms of Service
         </p>
       </div>
