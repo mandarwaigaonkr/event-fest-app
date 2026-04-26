@@ -112,7 +112,7 @@ export default function Profile() {
           </button>
         </div>
 
-        <p className="text-center text-[10px] text-text-muted pt-2 pb-4">Foobar 10.0 · v1.0.0</p>
+        <p className="text-center text-[10px] text-text-muted pt-2 pb-4">Christ Event Manager · v1.0.0</p>
       </div>
 
       <ConfirmModal

@@ -10,6 +10,8 @@ import EventCard from '../../components/EventCard'
 import Navbar from '../../components/Navbar'
 import { MagnifyingGlassIcon, SunIcon, MoonIcon, UserGroupIcon } from '@heroicons/react/24/outline'
 
+import christLogo from '../../assets/Christ complete logo.png'
+
 export default function Dashboard() {
   const navigate = useNavigate()
   const { user, profile } = useAuth()
@@ -112,13 +114,11 @@ export default function Dashboard() {
               </div>
             </div>
 
-            <button
-              onClick={toggleTheme}
-              className="w-9 h-9 rounded-xl bg-bg-elevated flex items-center justify-center text-text-muted hover:text-text-primary pressable"
-              aria-label="Toggle theme"
-            >
-              {isDark ? <SunIcon className="w-4 h-4" /> : <MoonIcon className="w-4 h-4" />}
-            </button>
+            <img 
+              src={christLogo} 
+              alt="Christ Logo" 
+              className="h-10 object-contain"
+            />
           </div>
 
           {/* Search */}

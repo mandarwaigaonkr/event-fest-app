@@ -9,6 +9,7 @@ import {
 import { doc, getDoc, setDoc, serverTimestamp } from 'firebase/firestore'
 import { auth, db, googleProvider } from '../../firebase'
 import { useAuth } from '../../hooks/useAuth'
+import christLogo from '../../assets/Christ complete logo.png'
 
 function authErrorMessage(code) {
   switch (code) {
@@ -114,12 +115,10 @@ export default function Login() {
       <div className="w-full max-w-sm flex flex-col items-center animate-fade-up">
         
         {/* Logo mark */}
-        <div className="w-12 h-12 rounded-2xl bg-accent flex items-center justify-center mb-8">
-          <span className="text-white text-lg font-black tracking-tight">F</span>
-        </div>
+        <img src={christLogo} alt="Christ Logo" className="w-[400px] h-[104px] object-contain mb-8" />
 
         <h1 className="text-2xl font-semibold text-text-primary tracking-tight">
-          Foobar 10.0
+          Christ Event Manager
         </h1>
         <p className="text-sm text-text-secondary mt-1.5 text-center">
           Your campus event companion
@@ -146,6 +145,10 @@ export default function Login() {
             </>
           )}
         </button>
+        
+        <p className="text-[13px] font-medium text-text-primary mt-4 text-center">
+          Note: Use Christ email ID.
+        </p>
 
         {error && (
           <p className="text-xs text-danger text-center mt-3">{error}</p>
