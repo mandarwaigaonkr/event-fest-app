@@ -3,6 +3,7 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { Toaster } from 'react-hot-toast'
 import AuthProvider from './context/AuthContext'
+import EventsProvider from './context/EventsContext'
 
 // Route guards
 import ProtectedRoute from './components/ProtectedRoute'
@@ -47,6 +48,7 @@ export default function App() {
             }}
           />
 
+          <EventsProvider>
           <Routes>
           {/* Public routes */}
           <Route path="/login" element={<Login />} />
@@ -89,6 +91,7 @@ export default function App() {
           <Route path="/" element={<Navigate to="/dashboard" replace />} />
           <Route path="*" element={<Navigate to="/dashboard" replace />} />
         </Routes>
+          </EventsProvider>
       </AuthProvider>
     </BrowserRouter>
     </ThemeProvider>

@@ -4,7 +4,8 @@ import { useNavigate } from 'react-router-dom'
 import { collectionGroup, query, where, onSnapshot } from 'firebase/firestore'
 import { db } from '../../firebase'
 import { useAuth } from '../../hooks/useAuth'
-import { useEvents, useUserRegistrations, registerForEvent, unregisterFromEvent } from '../../hooks/useEvents'
+import { useEventsContext } from '../../context/EventsContext'
+import { registerForEvent, unregisterFromEvent } from '../../hooks/useEvents'
 
 import EventCard from '../../components/EventCard'
 import Navbar from '../../components/Navbar'
@@ -15,8 +16,7 @@ import christLogo from '../../assets/Christ complete logo.png'
 export default function Dashboard() {
   const navigate = useNavigate()
   const { user, profile } = useAuth()
-  const { events, loading: eventsLoading } = useEvents()
-  const { registeredEventIds, waitlistedEventIds, registrations, loading: regsLoading } = useUserRegistrations(events, eventsLoading)
+  const { events, eventsLoading, registeredEventIds, waitlistedEventIds, registrations, regsLoading } = useEventsContext()
 
   const [search, setSearch] = useState('')
   const [activeTab, setActiveTab] = useState('upcoming')

@@ -1,6 +1,6 @@
 // src/pages/user/MyEvents.jsx
 import { useNavigate } from 'react-router-dom'
-import { useUserRegistrations } from '../../hooks/useEvents'
+import { useEventsContext } from '../../context/EventsContext'
 import Navbar from '../../components/Navbar'
 import { formatDateTime } from '../../utils/formatters'
 import {
@@ -43,7 +43,7 @@ function AttendanceBadge({ status }) {
 }
 
 export default function MyEvents() {
-  const { registrations, loading } = useUserRegistrations()
+  const { registrations, regsLoading: loading } = useEventsContext()
   const navigate = useNavigate()
 
   return (
