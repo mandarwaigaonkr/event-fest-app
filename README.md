@@ -1,44 +1,75 @@
 # Foobar 10.0 - Event Management Platform
 
-A mobile-first web app for college event discovery, registration, waitlists, team invites, attendance, and admin management.
+A modern, mobile-first Progressive Web App (PWA) for comprehensive college event discovery, team registrations, waitlists, and administration.
 
-## Current Direction
+## 🛠 Tech Stack
 
-This project is now web-first. Capacitor and the checked-in Android shell have been removed so development and testing can happen through normal web deployment instead of repeated APK builds.
+- **Frontend:** React + Vite
+- **Styling:** Tailwind CSS + Framer Motion (for smooth UI transitions)
+- **Authentication:** Firebase Auth (Google Sign-in with strict domain enforcement)
+- **Database:** Firestore (Real-time data synchronization and global state listeners)
+- **Hosting:** Vercel (SPA optimized) / Firebase Hosting
 
-The app is fully PWA-ready with a manifest and a service worker. It can be installed from supported mobile browsers, delivering a native-like experience while relying on live Firebase connectivity for core data flows.
+---
 
-## Tech Stack
+## 👥 User Functionality & Guidelines
 
-- React + Vite
-- Tailwind CSS
-- Firebase Auth
-- Firestore real-time data
-- Firebase Storage (initialized for media uploads)
-- Firebase Cloud Functions (scaffolded)
+The platform is designed to provide a seamless experience for students to discover and participate in events.
 
-## Features & Recent Improvements
+### 1. Authentication & Onboarding
+- **Strict Login:** All users must log in using their official Christ University domain email addresses.
+- **Smart Onboarding:** Registration numbers are automatically extracted from the user's Google display name. Users provide their Class and Department during onboarding.
+- **Data Integrity:** To maintain security and prevent impersonation, profile fields cannot be modified after the initial onboarding.
 
-- **Authentication & Security:** Google sign-in with strict domain enforcement, preventing unauthorized access. Mobile sign-in flows have been optimized for seamless performance across all browsers. Hardened Firestore security rules prevent profile manipulation and unauthorized event edits.
-- **User Onboarding:** Streamlined onboarding capturing registration number, class, and department, extracting info automatically from Google profiles where possible.
-- **Event Dashboard & Registration:** Real-time dashboard with individual and team event registration capabilities, complete with waitlist support.
-- **Team Management:** Robust invite system, capacity limits, and team role management with accurate registration count tracking and state handling.
-- **Admin Dashboard:** Event creation/editing, participant management, attendance tracking, and CSV exports.
-- **Performance Optimization Architecture:** 
-  - **Bundle Size:** Reduced initial bundle size via code-splitting and manual chunking.
-  - **Database Efficiency:** Minimized Firestore database reads by consolidating listeners into a global state.
-  - **UI Performance:** Smooth UI transitions and interactions using component memoization and refined state deduplication.
+### 2. Event Discovery & Dashboard
+- **Real-time Dashboard:** View all active events, their capacities, timings, and venues in real-time.
+- **Event Types:** Clearly distinguish between Individual and Team-based events.
 
-## Local Development
+### 3. Registration System
+- **Individual Events:** Simple one-click registration process.
+- **Team Events:** 
+  - Create a team and become the Team Leader.
+  - Send direct invites to teammates using their registered email addresses.
+  - Team members receive invites in their dashboard and must accept them to secure their spot.
+- **Waitlists:** If an event hits its capacity, subsequent registrations are safely queued on a waitlist. If spots open up, the system handles capacity accordingly.
 
-1. Install dependencies:
+### 4. User Profile & Management
+- **My Events:** A dedicated space to track all registered events and their current status (Confirmed, Waitlisted, etc.).
+- **Invitations:** View and manage pending team invites.
 
+---
+
+## 🛡️ Admin Roles & Management
+
+Administrators have elevated privileges to oversee the entire event lifecycle.
+
+### Granting Admin Access
+By default, all new accounts are standard participants. To promote a user to an Admin, update their Firestore user document:
+- **Collection:** `users`
+- **Document:** The user's Firebase UID
+- **Field:** `role`
+- **Value:** `admin`
+
+### Admin Capabilities
+- **Event Creation & Editing:** Full control over event details, including capacity limits, team size constraints, descriptions, and scheduling.
+- **Real-time Monitoring:** Track registration counts and waitlist numbers live from the admin dashboard.
+- **Participant Management:** 
+  - View comprehensive lists of registered individuals and teams.
+  - Identify team leaders and pending invites.
+- **Attendance Tracking:** Mark user attendance directly through the platform during the event.
+- **Data Export:** Export participant lists and attendance records to CSV for post-event reporting.
+
+---
+
+## 🚀 Local Development
+
+1. **Install dependencies:**
    ```bash
    npm install
    ```
 
-2. Create a `.env` file in the project root:
-
+2. **Environment Variables:**
+   Create a `.env` file in the root directory:
    ```env
    VITE_FIREBASE_API_KEY=your_api_key
    VITE_FIREBASE_AUTH_DOMAIN=your_auth_domain
@@ -48,72 +79,10 @@ The app is fully PWA-ready with a manifest and a service worker. It can be insta
    VITE_FIREBASE_APP_ID=your_app_id
    ```
 
-3. Start the dev server:
-
+3. **Start Development Server:**
    ```bash
    npm run dev
    ```
 
-4. Build for production:
-
-   ```bash
-   npm run build
-   ```
-
-5. Preview the production build:
-
-   ```bash
-   npm run preview
-   ```
-
-## Firebase Setup Notes
-
-- Add your deployed web domain to Firebase Auth authorized domains.
-- Enable the Google provider in Firebase Auth.
-- Deploy `firestore.rules` before using the optimized collection group registration listener.
-- Firestore is the source of truth for live app state; the service worker only caches the app shell and static assets.
-
-## Deployment
-
-The platform is optimized for Vercel deployment with a pre-configured `vercel.json` for proper Single Page Application (SPA) routing. It also supports Firebase Hosting, Netlify, and Cloudflare Pages.
-
-For standard hosts, ensure BrowserRouter routes (e.g., `/dashboard` or `/admin`) are rewritten to `index.html`.
-
-Vercel configuration (already included):
-
-```json
-{
-  "rewrites": [
-    { "source": "/(.*)", "destination": "/index.html" }
-  ]
-}
-```
-
-Firebase Hosting example:
-
-```json
-{
-  "hosting": {
-    "public": "dist",
-    "rewrites": [
-      { "source": "**", "destination": "/index.html" }
-    ]
-  }
-}
-```
-
-## Admin Configuration
-
-New users are created as standard participants. To grant admin access, update the user document in Firestore:
-
-- Collection: `users`
-- Document: the user's Firebase UID
-- Field: `role`
-- Value: `admin`
-
-## Future Native Options
-
-If app store distribution becomes necessary later, keep this web app as the primary product and wrap it as a distribution layer:
-
-- Android: Trusted Web Activity or a fresh Capacitor shell
-- iOS: PWA install path first, native wrapper only if App Store distribution is required
+## 🌐 Deployment Notes
+The app is optimized for Vercel with a pre-configured `vercel.json` to handle Single Page Application (SPA) routing, ensuring direct links to `/dashboard` or `/admin` resolve correctly without 404 errors. It is fully PWA-ready and can be installed natively on mobile devices directly from the browser.
