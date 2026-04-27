@@ -1,4 +1,4 @@
-# Foobar 10.0 - Event Management Platform
+# Christ University Event Management
 
 A modern, mobile-first Progressive Web App (PWA) for comprehensive college event discovery, team registrations, waitlists, and administration.
 
