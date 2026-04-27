@@ -6,7 +6,7 @@ A mobile-first web app for college event discovery, registration, waitlists, tea
 
 This project is now web-first. Capacitor and the checked-in Android shell have been removed so development and testing can happen through normal web deployment instead of repeated APK builds.
 
-The app is also PWA-ready with a manifest and a conservative service worker. It can be installed from supported mobile browsers, while core data flows still rely on live Firebase connectivity.
+The app is fully PWA-ready with a manifest and a service worker. It can be installed from supported mobile browsers, delivering a native-like experience while relying on live Firebase connectivity for core data flows.
 
 ## Tech Stack
 
@@ -14,22 +14,20 @@ The app is also PWA-ready with a manifest and a conservative service worker. It 
 - Tailwind CSS
 - Firebase Auth
 - Firestore real-time data
-- Firebase Storage initialized for future poster/media uploads
-- Firebase Cloud Functions scaffolded but not yet implemented
+- Firebase Storage (initialized for media uploads)
+- Firebase Cloud Functions (scaffolded)
 
-## Features
+## Features & Recent Improvements
 
-- Google sign-in through Firebase Auth for web
-- User onboarding with registration number, class, and department
-- Real-time event dashboard
-- Individual and team event registration
-- Waitlist support
-- Team invites and invite responses
-- User profile and registered events
-- Admin event creation and editing
-- Participant management
-- Attendance marking
-- CSV export
+- **Authentication & Security:** Google sign-in with strict domain enforcement, preventing unauthorized access. Mobile sign-in flows have been optimized for seamless performance across all browsers. Hardened Firestore security rules prevent profile manipulation and unauthorized event edits.
+- **User Onboarding:** Streamlined onboarding capturing registration number, class, and department, extracting info automatically from Google profiles where possible.
+- **Event Dashboard & Registration:** Real-time dashboard with individual and team event registration capabilities, complete with waitlist support.
+- **Team Management:** Robust invite system, capacity limits, and team role management with accurate registration count tracking and state handling.
+- **Admin Dashboard:** Event creation/editing, participant management, attendance tracking, and CSV exports.
+- **Performance Optimization Architecture:** 
+  - **Bundle Size:** Reduced initial bundle size via code-splitting and manual chunking.
+  - **Database Efficiency:** Minimized Firestore database reads by consolidating listeners into a global state.
+  - **UI Performance:** Smooth UI transitions and interactions using component memoization and refined state deduplication.
 
 ## Local Development
 
@@ -77,9 +75,19 @@ The app is also PWA-ready with a manifest and a conservative service worker. It 
 
 ## Deployment
 
-Any static hosting that supports Vite SPAs works. Firebase Hosting, Vercel, Netlify, and Cloudflare Pages are all suitable.
+The platform is optimized for Vercel deployment with a pre-configured `vercel.json` for proper Single Page Application (SPA) routing. It also supports Firebase Hosting, Netlify, and Cloudflare Pages.
 
-For BrowserRouter routes such as `/dashboard` or `/admin`, configure the host to rewrite all app routes to `index.html`.
+For standard hosts, ensure BrowserRouter routes (e.g., `/dashboard` or `/admin`) are rewritten to `index.html`.
+
+Vercel configuration (already included):
+
+```json
+{
+  "rewrites": [
+    { "source": "/(.*)", "destination": "/index.html" }
+  ]
+}
+```
 
 Firebase Hosting example:
 
