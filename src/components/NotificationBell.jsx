@@ -40,6 +40,8 @@ export default function NotificationBell() {
     notifications,
     notificationsLoading,
     markNotificationsRead,
+    deleteNotification,
+    clearAllNotifications,
   } = useEventsContext()
 
   const inviteNotifications = useMemo(() => {
@@ -128,14 +130,31 @@ export default function NotificationBell() {
       </button>
 
       {open && (
-        <div className="fixed sm:absolute left-4 right-4 sm:left-auto sm:right-0 top-20 sm:top-12 z-[70] sm:w-[21rem] origin-top-right rounded-2xl border border-bg-border bg-bg-card/95 backdrop-blur-xl shadow-2xl animate-scale-in overflow-hidden">
+        <div 
+          className="fixed sm:absolute left-4 right-4 sm:left-auto sm:right-0 top-20 sm:top-12 z-[70] sm:w-[21rem] origin-top-right rounded-2xl border border-bg-border shadow-2xl animate-scale-in overflow-hidden"
+          style={{ backgroundColor: 'var(--color-bg-base-solid)' }}
+        >
           <div className="px-4 py-3 border-b border-bg-border">
             <div className="flex items-center justify-between gap-3">
-              <h2 className="text-sm font-bold text-text-primary">Notifications</h2>
-              {unreadCount > 0 && (
-                <span className="text-[11px] font-semibold text-accent bg-accent/10 px-2 py-0.5 rounded-full">
-                  {unreadCount} new
-                </span>
+              <div className="flex items-center gap-2">
+                <h2 className="text-sm font-bold text-text-primary">Notifications</h2>
+                {unreadCount > 0 && (
+                  <span className="text-[11px] font-semibold text-accent bg-accent/10 px-2 py-0.5 rounded-full">
+                    {unreadCount} new
+                  </span>
+                )}
+              </div>
+              {notifications.length > 0 && (
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    clearAllNotifications()
+                  }}
+                  className="text-xs font-medium text-text-muted hover:text-danger transition-colors px-2 py-1 rounded-md hover:bg-danger/10"
+                >
+                  Clear all
+                </button>
               )}
             </div>
           </div>
@@ -179,12 +198,27 @@ export default function NotificationBell() {
                       </div>
                       <div className="min-w-0 flex-1">
                         <div className="flex items-start justify-between gap-2">
-                          <p className="text-sm font-semibold text-text-primary line-clamp-1">
+                          <p className="text-sm font-semibold text-text-primary line-clamp-1 flex-1">
                             {item.title}
                           </p>
-                          {isUnread && (
-                            <span className="mt-1 w-2 h-2 rounded-full bg-accent shrink-0" />
-                          )}
+                          <div className="flex items-center gap-2 shrink-0">
+                            {isUnread && (
+                              <span className="mt-1 w-2 h-2 rounded-full bg-accent" />
+                            )}
+                            {item.source === 'stored' && (
+                              <button
+                                type="button"
+                                onClick={(e) => {
+                                  e.stopPropagation()
+                                  deleteNotification(item.id)
+                                }}
+                                className="w-5 h-5 flex items-center justify-center rounded hover:bg-bg-border text-text-muted hover:text-danger transition-colors ml-1"
+                                aria-label="Dismiss notification"
+                              >
+                                &times;
+                              </button>
+                            )}
+                          </div>
                         </div>
                         <p className="text-xs text-text-secondary mt-0.5 line-clamp-2">
                           {item.message}

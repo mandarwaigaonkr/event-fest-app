@@ -225,14 +225,14 @@ textarea {
   height: 100%;
   object-fit: cover;
   object-position: center bottom;
-  opacity: 0.18;
+  opacity: 0.10;
   filter: blur(4px) saturate(1.2);
   transform: scale(1.02); /* prevent blur edge artifacts */
   transition: opacity 0.5s ease, filter 0.5s ease;
 }
 
 .dark .app-bg__img {
-  opacity: 0.22;
+  opacity: 0.14;
   filter: blur(4px) saturate(1.1);
 }
 

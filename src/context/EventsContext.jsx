@@ -181,6 +181,31 @@ export default function EventsProvider({ children }) {
     await batch.commit()
   }, [user])
 
+  const deleteNotification = useCallback(async (notificationId) => {
+    if (!user || !notificationId) return
+    try {
+      // Use deleteDoc directly but we need to import it. Let's just use writeBatch for consistency or import deleteDoc
+      const batch = writeBatch(db)
+      batch.delete(doc(db, 'users', user.uid, 'notifications', notificationId))
+      await batch.commit()
+    } catch (err) {
+      console.error('Error deleting notification:', err)
+    }
+  }, [user])
+
+  const clearAllNotifications = useCallback(async () => {
+    if (!user || notifications.length === 0) return
+    try {
+      const batch = writeBatch(db)
+      notifications.forEach((item) => {
+        batch.delete(doc(db, 'users', user.uid, 'notifications', item.id))
+      })
+      await batch.commit()
+    } catch (err) {
+      console.error('Error clearing notifications:', err)
+    }
+  }, [user, notifications])
+
   return (
     <EventsContext.Provider value={{
       events,
@@ -193,6 +218,8 @@ export default function EventsProvider({ children }) {
       notifications,
       notificationsLoading,
       markNotificationsRead,
+      deleteNotification,
+      clearAllNotifications,
     }}>
       {children}
     </EventsContext.Provider>
