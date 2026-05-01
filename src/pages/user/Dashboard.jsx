@@ -7,6 +7,7 @@ import { registerForEvent, unregisterFromEvent } from '../../hooks/useEvents'
 
 import EventCard from '../../components/EventCard'
 import Navbar from '../../components/Navbar'
+import NotificationBell from '../../components/NotificationBell'
 import { MagnifyingGlassIcon, UserGroupIcon } from '@heroicons/react/24/outline'
 
 import christLogo from '../../assets/Christ complete logo.png'
@@ -84,11 +85,14 @@ export default function Dashboard() {
               </div>
             </div>
 
-            <img 
-              src={christLogo} 
-              alt="Christ Logo" 
-              className="h-10 object-contain"
-            />
+            <div className="flex items-center gap-2">
+              <NotificationBell />
+              <img
+                src={christLogo}
+                alt="Christ Logo"
+                className="h-10 object-contain"
+              />
+            </div>
           </div>
 
           {/* Search */}

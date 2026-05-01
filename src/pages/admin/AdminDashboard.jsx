@@ -7,6 +7,7 @@ import { doc, updateDoc } from 'firebase/firestore'
 import { db } from '../../firebase'
 import { formatDateTime } from '../../utils/formatters'
 import toast from 'react-hot-toast'
+import NotificationBell from '../../components/NotificationBell'
 import {
   PlusIcon,
   UsersIcon,
@@ -55,7 +56,10 @@ export default function AdminDashboard() {
               <h1 className="text-lg font-bold text-text-primary leading-tight">Admin Panel</h1>
               <p className="text-xs text-text-muted mt-0.5">Create & manage events</p>
             </div>
-            <img src={christLogo} alt="Christ Logo" className="h-9 object-contain" />
+            <div className="flex items-center gap-2">
+              <NotificationBell />
+              <img src={christLogo} alt="Christ Logo" className="h-9 object-contain" />
+            </div>
           </div>
         </div>
       </div>

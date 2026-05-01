@@ -17,7 +17,6 @@ import {
   IdentificationIcon,
   EnvelopeIcon,
   ShieldCheckIcon,
-  Cog6ToothIcon,
   ChevronRightIcon,
 } from '@heroicons/react/24/outline'
 

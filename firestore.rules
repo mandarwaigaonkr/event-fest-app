@@ -113,12 +113,52 @@ service cloud.firestore {
         ]) &&
         request.resource.data.status in ['incomplete', 'valid', 'cancelled'];
     }
+    function isSafeNotificationCreate(uid) {
+      return isSignedIn() &&
+        request.resource.data.recipientUid == uid &&
+        request.resource.data.actorUid == request.auth.uid &&
+        request.resource.data.read == false &&
+        request.resource.data.keys().hasOnly([
+          'type',
+          'title',
+          'message',
+          'link',
+          'eventId',
+          'teamId',
+          'actorUid',
+          'actorName',
+          'recipientUid',
+          'read',
+          'createdAt'
+        ]) &&
+        request.resource.data.type in [
+          'team_invite_accepted',
+          'team_invite_rejected',
+          'event_update',
+          'admin_notice'
+        ];
+    }
+    function isSafeNotificationReadUpdate(uid) {
+      return isOwner(uid) &&
+        request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+          'read',
+          'readAt'
+        ]) &&
+        request.resource.data.read == true;
+    }
 
     match /users/{uid} {
       allow read: if isSignedIn();
       allow create: if isSafeUserCreate(uid);
       allow update: if isAdmin() || isSafeUserUpdate(uid);
       allow delete: if isAdmin();
+
+      match /notifications/{notificationId} {
+        allow read: if isOwner(uid) || isAdmin();
+        allow create: if isSafeNotificationCreate(uid) || isAdmin();
+        allow update: if isSafeNotificationReadUpdate(uid) || isAdmin();
+        allow delete: if isOwner(uid) || isAdmin();
+      }
     }
 
     match /events/{eventId} {

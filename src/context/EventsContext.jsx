@@ -2,14 +2,17 @@
 // Shared events cache — prevents skeleton flashes when switching tabs
 // Data is loaded once and stays in memory across page navigations
 
-import { createContext, useContext, useState, useEffect } from 'react'
+import { createContext, useContext, useState, useEffect, useCallback } from 'react'
 import {
   collection,
   collectionGroup,
+  doc,
   query,
   orderBy,
   onSnapshot,
   where,
+  writeBatch,
+  serverTimestamp,
 } from 'firebase/firestore'
 import { db } from '../firebase'
 import { useAuth } from '../hooks/useAuth'
@@ -132,6 +135,52 @@ export default function EventsProvider({ children }) {
     return unsub
   }, [user])
 
+  // ── Notifications (shared bell surface for current and future alerts) ──
+  const [notifications, setNotifications] = useState([])
+  const [notificationsLoading, setNotificationsLoading] = useState(true)
+
+  useEffect(() => {
+    if (!user) {
+      setNotifications([])
+      setNotificationsLoading(false)
+      return
+    }
+
+    setNotificationsLoading(true)
+
+    const q = query(
+      collection(db, 'users', user.uid, 'notifications'),
+      orderBy('createdAt', 'desc')
+    )
+
+    const unsub = onSnapshot(q, (snap) => {
+      setNotifications(snap.docs.map(docSnap => ({
+        id: docSnap.id,
+        source: 'stored',
+        ...docSnap.data(),
+      })))
+      setNotificationsLoading(false)
+    }, (err) => {
+      console.error('Notifications listener error:', err)
+      setNotificationsLoading(false)
+    })
+
+    return unsub
+  }, [user])
+
+  const markNotificationsRead = useCallback(async (notificationIds) => {
+    if (!user || notificationIds.length === 0) return
+
+    const batch = writeBatch(db)
+    notificationIds.forEach((id) => {
+      batch.update(doc(db, 'users', user.uid, 'notifications', id), {
+        read: true,
+        readAt: serverTimestamp(),
+      })
+    })
+    await batch.commit()
+  }, [user])
+
   return (
     <EventsContext.Provider value={{
       events,
@@ -141,6 +190,9 @@ export default function EventsProvider({ children }) {
       registrations,
       regsLoading,
       pendingInvites,
+      notifications,
+      notificationsLoading,
+      markNotificationsRead,
     }}>
       {children}
     </EventsContext.Provider>

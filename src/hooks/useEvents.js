@@ -9,7 +9,6 @@ import {
   orderBy,
   onSnapshot,
   doc,
-  getDoc,
   runTransaction,
   serverTimestamp,
   where,
@@ -19,6 +18,18 @@ import {
 import { db } from '../firebase'
 import { useAuth } from './useAuth'
 import toast from 'react-hot-toast'
+
+function queueNotification(transaction, recipientUid, payload) {
+  if (!recipientUid) return
+
+  const notificationRef = doc(collection(db, 'users', recipientUid, 'notifications'))
+  transaction.set(notificationRef, {
+    ...payload,
+    recipientUid,
+    read: false,
+    createdAt: serverTimestamp(),
+  })
+}
 
 /**
  * Hook: Listen to all active events in real time
@@ -442,6 +453,19 @@ export async function respondToTeamInvite(eventId, teamId, userProfile, accept) 
         transaction.update(eventRef, { registeredCount: (eventData.registeredCount || 0) + 1 })
       } else {
         transaction.update(eventRef, { waitlistCount: (eventData.waitlistCount || 0) + 1 })
+      }
+
+      if (teamData.leaderUid !== userProfile.uid) {
+        queueNotification(transaction, teamData.leaderUid, {
+          type: 'team_invite_accepted',
+          title: 'Team invite accepted',
+          message: `${userProfile.name || 'A teammate'} accepted your invite to join ${teamData.name}.`,
+          actorUid: userProfile.uid,
+          actorName: userProfile.name || '',
+          eventId,
+          teamId,
+          link: `/event/${eventId}`,
+        })
       }
     })
 
