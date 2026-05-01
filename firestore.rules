@@ -16,14 +16,45 @@ service cloud.firestore {
       return isOwner(uid) &&
         request.resource.data.uid == uid &&
         request.resource.data.role == 'user' &&
-        request.auth.token.email.matches('.*christuniversity\\.in');
+        request.resource.data.email == request.auth.token.email &&
+        request.auth.token.email.matches('.*christuniversity\\.in') &&
+        request.resource.data.keys().hasOnly([
+          'uid',
+          'name',
+          'email',
+          'photoURL',
+          'regNumber',
+          'role',
+          'onboarded',
+          'createdAt',
+          'updatedAt'
+        ]);
     }
     function isSafeUserUpdate(uid) {
       return isOwner(uid) &&
         request.resource.data.uid == resource.data.uid &&
-        request.resource.data.role == resource.data.role;
+        resource.data.role == 'user' &&
+        request.resource.data.role == 'user' &&
+        request.resource.data.email == resource.data.email &&
+        request.resource.data.keys().hasOnly([
+          'uid',
+          'name',
+          'email',
+          'photoURL',
+          'regNumber',
+          'role',
+          'onboarded',
+          'createdAt',
+          'updatedAt',
+          'class',
+          'department'
+        ]);
     }
-    function isSafeAdminRequestWrite(uid) {
+    function isAdminUser(uid) {
+      return exists(/databases/$(database)/documents/users/$(uid)) &&
+        get(/databases/$(database)/documents/users/$(uid)).data.role == 'admin';
+    }
+    function isPendingAdminRequestShape(uid) {
       return isOwner(uid) &&
         request.resource.data.uid == uid &&
         request.resource.data.role == 'pending_admin' &&
@@ -44,6 +75,17 @@ service cloud.firestore {
           'requestedAdminAt',
           'updatedAt'
         ]);
+    }
+    function isSafeAdminRequestCreate(uid) {
+      return isPendingAdminRequestShape(uid);
+    }
+    function isSafeAdminRequestUpdate(uid) {
+      return isPendingAdminRequestShape(uid) &&
+        resource.data.uid == uid &&
+        (
+          resource.data.role == 'user' ||
+          (resource.data.role == 'pending_admin' && resource.data.adminStatus == 'draft')
+        );
     }
     function isSafeRegistrationCreate(uid) {
       return isOwner(uid) &&
@@ -135,7 +177,7 @@ service cloud.firestore {
         ]) &&
         request.resource.data.status in ['incomplete', 'valid', 'cancelled'];
     }
-    function isSafeNotificationCreate(uid) {
+    function isSafeTeamNotificationCreate(uid) {
       return isSignedIn() &&
         request.resource.data.recipientUid == uid &&
         request.resource.data.actorUid == request.auth.uid &&
@@ -155,13 +197,33 @@ service cloud.firestore {
         ]) &&
         request.resource.data.type in [
           'team_invite_accepted',
-          'team_invite_rejected',
-          'admin_access_requested',
-          'admin_access_approved',
-          'admin_access_rejected',
-          'event_update',
-          'admin_notice'
+          'team_invite_rejected'
         ];
+    }
+    function isSafeAdminRequestNotificationCreate(uid) {
+      return isSignedIn() &&
+        isAdminUser(uid) &&
+        getAfter(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'pending_admin' &&
+        getAfter(/databases/$(database)/documents/users/$(request.auth.uid)).data.adminStatus == 'pending' &&
+        request.resource.data.recipientUid == uid &&
+        request.resource.data.actorUid == request.auth.uid &&
+        request.resource.data.type == 'admin_access_requested' &&
+        request.resource.data.read == false &&
+        request.resource.data.keys().hasOnly([
+          'type',
+          'title',
+          'message',
+          'link',
+          'actorUid',
+          'actorName',
+          'recipientUid',
+          'read',
+          'createdAt'
+        ]);
+    }
+    function isSafeNotificationCreate(uid) {
+      return isSafeTeamNotificationCreate(uid) ||
+        isSafeAdminRequestNotificationCreate(uid);
     }
     function isSafeNotificationReadUpdate(uid) {
       return isOwner(uid) &&
@@ -173,9 +235,11 @@ service cloud.firestore {
     }
 
     match /users/{uid} {
-      allow read: if isSignedIn();
-      allow create: if isSafeUserCreate(uid) || isSafeAdminRequestWrite(uid);
-      allow update: if isAdmin() || isSafeUserUpdate(uid) || isSafeAdminRequestWrite(uid);
+      allow read: if isOwner(uid) ||
+        isAdmin() ||
+        (isSignedIn() && resource.data.role in ['user', 'admin']);
+      allow create: if isSafeUserCreate(uid) || isSafeAdminRequestCreate(uid);
+      allow update: if isAdmin() || isSafeUserUpdate(uid) || isSafeAdminRequestUpdate(uid);
       allow delete: if isAdmin();
 
       match /notifications/{notificationId} {
