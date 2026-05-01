@@ -2,7 +2,7 @@
 // Profile completion — auto-detected regNumber (read-only), class, department
 
 import { useState, useMemo } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { Navigate, useNavigate } from 'react-router-dom'
 import { doc, setDoc, serverTimestamp } from 'firebase/firestore'
 import { db } from '../../firebase'
 import { useAuth } from '../../hooks/useAuth'
@@ -20,11 +20,19 @@ const DEPARTMENT_OPTIONS = [
   'MBA',
 ]
 
+const LOGIN_MODE_KEY = 'event-manager-login-mode'
+
 
 
 export default function Onboarding() {
   const { user, profile } = useAuth()
   const navigate = useNavigate()
+
+  const isAdminLogin = sessionStorage.getItem(LOGIN_MODE_KEY) === 'admin'
+  const isAdminAccessAccount = profile?.role === 'admin' ||
+    profile?.role === 'pending_admin' ||
+    profile?.adminStatus === 'pending' ||
+    profile?.adminStatus === 'rejected'
 
   // Auto-detect reg number — prefer what's already in Firestore (set during ensureUserProfile),
   // fall back to extracting from displayName
@@ -87,6 +95,9 @@ export default function Onboarding() {
   const inputNormal = `${inputBase} border-bg-border focus:border-accent`
   const inputError = `${inputBase} border-danger/60 focus:border-danger`
   const inputReadOnly = `${inputBase} border-bg-border bg-bg-base text-text-muted cursor-not-allowed`
+
+  if (!user) return <Navigate to="/login" replace />
+  if (isAdminLogin || isAdminAccessAccount) return <Navigate to="/admin-onboarding" replace />
 
   return (
     <div className="min-h-screen bg-bg-base flex flex-col items-center justify-center px-4 py-10">

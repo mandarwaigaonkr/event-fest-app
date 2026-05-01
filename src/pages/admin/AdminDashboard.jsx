@@ -1,13 +1,24 @@
 // src/pages/admin/AdminDashboard.jsx
 // Admin home — quick stats, event list with management actions
 
+import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useEvents } from '../../hooks/useEvents'
-import { doc, updateDoc } from 'firebase/firestore'
+import {
+  addDoc,
+  collection,
+  doc,
+  onSnapshot,
+  query,
+  serverTimestamp,
+  updateDoc,
+  where,
+} from 'firebase/firestore'
 import { db } from '../../firebase'
 import { formatDateTime } from '../../utils/formatters'
 import toast from 'react-hot-toast'
 import NotificationBell from '../../components/NotificationBell'
+import { useAuth } from '../../hooks/useAuth'
 import {
   PlusIcon,
   UsersIcon,
@@ -24,10 +35,32 @@ import christLogo from '../../assets/Christ complete logo.png'
 
 export default function AdminDashboard() {
   const navigate = useNavigate()
+  const { user } = useAuth()
   const { events, loading } = useEvents()
+  const [adminRequests, setAdminRequests] = useState([])
+  const [reviewingId, setReviewingId] = useState(null)
 
   const activeEvents = events.filter(e => e.status === 'active')
   const totalParticipants = events.reduce((sum, e) => sum + (e.registeredCount || 0), 0)
+
+  useEffect(() => {
+    const requestsQuery = query(
+      collection(db, 'users'),
+      where('role', '==', 'pending_admin'),
+      where('adminStatus', '==', 'pending')
+    )
+
+    const unsub = onSnapshot(requestsQuery, (snap) => {
+      setAdminRequests(snap.docs.map(requestDoc => ({
+        id: requestDoc.id,
+        ...requestDoc.data(),
+      })))
+    }, (err) => {
+      console.error('Admin requests listener error:', err)
+    })
+
+    return unsub
+  }, [])
 
   async function toggleEventStatus(event) {
     const newStatus = event.status === 'active' ? 'cancelled' : 'active'
@@ -36,6 +69,43 @@ export default function AdminDashboard() {
       toast.success(`Event ${newStatus === 'active' ? 'activated' : 'cancelled'}`)
     } catch {
       toast.error('Failed to update event status')
+    }
+  }
+
+  async function reviewAdminRequest(request, approved) {
+    if (!user) return
+
+    setReviewingId(request.id)
+    try {
+      await updateDoc(doc(db, 'users', request.id), {
+        role: approved ? 'admin' : 'pending_admin',
+        adminStatus: approved ? 'approved' : 'rejected',
+        approvedBy: approved ? user.uid : null,
+        rejectedBy: approved ? null : user.uid,
+        reviewedAt: serverTimestamp(),
+        updatedAt: serverTimestamp(),
+      })
+
+      await addDoc(collection(db, 'users', request.id, 'notifications'), {
+        type: approved ? 'admin_access_approved' : 'admin_access_rejected',
+        title: approved ? 'Admin access approved' : 'Admin access rejected',
+        message: approved
+          ? 'Your admin access request was approved. You can now open the admin dashboard.'
+          : 'Your admin access request was rejected.',
+        actorUid: user.uid,
+        actorName: user.displayName || 'Admin',
+        recipientUid: request.id,
+        link: approved ? '/admin' : '/admin-onboarding',
+        read: false,
+        createdAt: serverTimestamp(),
+      })
+
+      toast.success(approved ? 'Admin request approved' : 'Admin request rejected')
+    } catch (err) {
+      console.error(err)
+      toast.error('Failed to review admin request')
+    } finally {
+      setReviewingId(null)
     }
   }
 
@@ -92,6 +162,54 @@ export default function AdminDashboard() {
           <PlusIcon className="w-5 h-5" />
           Create New Event
         </button>
+
+        {adminRequests.length > 0 && (
+          <div className="bg-bg-card border border-bg-border rounded-2xl overflow-hidden animate-fade-up">
+            <div className="px-4 py-3 border-b border-bg-border">
+              <h2 className="text-sm font-bold text-text-primary">Admin Access Requests</h2>
+              <p className="text-xs text-text-muted mt-0.5">Review pending administrator requests.</p>
+            </div>
+            <div className="divide-y divide-bg-border">
+              {adminRequests.map(request => (
+                <div key={request.id} className="p-4">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="min-w-0">
+                      <h3 className="text-sm font-semibold text-text-primary truncate">{request.name}</h3>
+                      <p className="text-xs text-text-muted truncate">{request.email}</p>
+                      <p className="text-xs text-text-secondary mt-1">
+                        {request.designation} · {request.organization}
+                      </p>
+                    </div>
+                    <span className="text-[10px] font-bold px-2 py-1 rounded-full bg-warning/10 text-warning shrink-0">
+                      Pending
+                    </span>
+                  </div>
+                  <p className="text-xs text-text-secondary mt-3 line-clamp-2">
+                    {request.adminRequestReason}
+                  </p>
+                  <div className="grid grid-cols-2 gap-2 mt-4">
+                    <button
+                      type="button"
+                      onClick={() => reviewAdminRequest(request, false)}
+                      disabled={reviewingId === request.id}
+                      className="h-10 rounded-xl border border-danger/20 bg-danger/10 text-danger text-xs font-semibold pressable disabled:opacity-50"
+                    >
+                      Reject
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => reviewAdminRequest(request, true)}
+                      disabled={reviewingId === request.id}
+                      className="h-10 rounded-xl bg-success text-white text-xs font-semibold pressable disabled:opacity-50"
+                    >
+                      Approve
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
 
         {/* Events List */}
         <div>

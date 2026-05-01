@@ -7,10 +7,13 @@ import { useAuth } from '../hooks/useAuth'
 import LoadingSpinner from './LoadingSpinner'
 
 export default function AdminRoute({ children }) {
-  const { user, loading, isAdmin, isOnboarded } = useAuth()
+  const { user, profile, loading, isAdmin, isOnboarded } = useAuth()
 
   if (loading) return <LoadingSpinner />
   if (!user) return <Navigate to="/login" replace />
+  if (profile?.role === 'pending_admin' || profile?.adminStatus === 'pending' || profile?.adminStatus === 'rejected') {
+    return <Navigate to="/admin-onboarding" replace />
+  }
   if (!isOnboarded) return <Navigate to="/onboarding" replace />
   if (!isAdmin) return <Navigate to="/dashboard" replace />
 

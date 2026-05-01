@@ -24,6 +24,7 @@ function RouteFallback() {
 // Auth pages (rarely visited after first login)
 const Login = lazy(() => import('./pages/auth/Login'))
 const Onboarding = lazy(() => import('./pages/auth/Onboarding'))
+const AdminOnboarding = lazy(() => import('./pages/auth/AdminOnboarding'))
 
 // User pages
 const Dashboard = lazy(() => import('./pages/user/Dashboard'))
@@ -66,6 +67,7 @@ export default function App() {
 
           {/* Onboarding — needs auth but not onboarded yet */}
           <Route path="/onboarding" element={<Onboarding />} />
+          <Route path="/admin-onboarding" element={<AdminOnboarding />} />
 
           {/* Protected user routes */}
           <Route path="/dashboard" element={

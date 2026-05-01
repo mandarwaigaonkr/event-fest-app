@@ -14,6 +14,7 @@ import { extractRegNumber, extractCleanName } from '../../utils/formatters'
 import christLogo from '../../assets/Christ complete logo.png'
 
 const ALLOWED_DOMAIN = 'christuniversity.in'
+const LOGIN_MODE_KEY = 'event-manager-login-mode'
 
 
 
@@ -32,7 +33,7 @@ function authErrorMessage(code) {
   }
 }
 
-async function ensureUserProfile(firebaseUser, navigate) {
+async function ensureStudentProfile(firebaseUser, navigate) {
   // Enforce Christ University email domain
   if (!firebaseUser.email?.endsWith(ALLOWED_DOMAIN)) {
     await signOut(auth)
@@ -62,20 +63,68 @@ async function ensureUserProfile(firebaseUser, navigate) {
   }
 
   const data = userSnap.data()
-  if (!data.onboarded) navigate('/onboarding', { replace: true })
+  if (data.role === 'pending_admin' || data.adminStatus === 'pending' || data.adminStatus === 'rejected') {
+    navigate('/admin-onboarding', { replace: true })
+  } else if (!data.onboarded) navigate('/onboarding', { replace: true })
   else if (data.role === 'admin') navigate('/admin', { replace: true })
   else navigate('/dashboard', { replace: true })
 }
 
+async function ensureAdminProfile(firebaseUser, navigate) {
+  const userRef = doc(db, 'users', firebaseUser.uid)
+  const userSnap = await getDoc(userRef)
+
+  if (!userSnap.exists()) {
+    await setDoc(userRef, {
+      uid: firebaseUser.uid,
+      name: firebaseUser.displayName || '',
+      email: firebaseUser.email,
+      photoURL: firebaseUser.photoURL,
+      role: 'pending_admin',
+      adminStatus: 'draft',
+      designation: '',
+      organization: '',
+      adminRequestReason: '',
+      onboarded: false,
+      createdAt: serverTimestamp(),
+      updatedAt: serverTimestamp(),
+    })
+    navigate('/admin-onboarding', { replace: true })
+    return
+  }
+
+  const data = userSnap.data()
+  if (data.role === 'admin' && data.onboarded) {
+    navigate('/admin', { replace: true })
+    return
+  }
+
+  navigate('/admin-onboarding', { replace: true })
+}
+
+function GoogleIcon() {
+  return (
+    <svg className="w-[20px] h-[20px] shrink-0" viewBox="0 0 24 24">
+      <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+      <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+      <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z"/>
+      <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+    </svg>
+  )
+}
+
 export default function Login() {
   const [loading, setLoading] = useState(false)
+  const [loginMode, setLoginMode] = useState('student')
   const [error, setError] = useState('')
   const navigate = useNavigate()
   const { user, profile, loading: authLoading, isAdmin, isOnboarded } = useAuth()
 
   useEffect(() => {
     if (authLoading || !user || !profile) return
-    if (!isOnboarded) navigate('/onboarding', { replace: true })
+    if (profile.role === 'pending_admin' || profile.adminStatus === 'pending' || profile.adminStatus === 'rejected') {
+      navigate('/admin-onboarding', { replace: true })
+    } else if (!isOnboarded) navigate('/onboarding', { replace: true })
     else if (isAdmin) navigate('/admin', { replace: true })
     else navigate('/dashboard', { replace: true })
   }, [authLoading, user, profile, isAdmin, isOnboarded, navigate])
@@ -87,7 +136,9 @@ export default function Login() {
       try {
         const result = await getRedirectResult(auth)
         if (!result || !mounted) return
-        await ensureUserProfile(result.user, navigate)
+        const mode = sessionStorage.getItem(LOGIN_MODE_KEY) || 'student'
+        if (mode === 'admin') await ensureAdminProfile(result.user, navigate)
+        else await ensureStudentProfile(result.user, navigate)
       } catch (err) {
         console.error(err)
         if (mounted) setError(authErrorMessage(err.code))
@@ -100,12 +151,15 @@ export default function Login() {
     }
   }, [navigate])
 
-  async function handleGoogleSignIn() {
+  async function handleGoogleSignIn(mode) {
     setLoading(true)
+    setLoginMode(mode)
     setError('')
+    sessionStorage.setItem(LOGIN_MODE_KEY, mode)
     try {
       const result = await signInWithPopup(auth, googleProvider)
-      await ensureUserProfile(result.user, navigate)
+      if (mode === 'admin') await ensureAdminProfile(result.user, navigate)
+      else await ensureStudentProfile(result.user, navigate)
     } catch (err) {
       console.error(err)
       setError(authErrorMessage(err.code))
@@ -153,27 +207,39 @@ export default function Login() {
           Your campus event companion
         </p>
 
-        {/* Google button */}
-        <button
-          id="google-signin-btn"
-          onClick={handleGoogleSignIn}
-          disabled={loading}
-          className="w-full mt-10 h-14 bg-bg-card border border-bg-border rounded-[1rem] shadow-sm hover:shadow-md hover:-translate-y-0.5 flex items-center justify-center gap-3 text-[15px] font-semibold text-text-primary active:scale-[0.98] transition-all duration-300 disabled:opacity-50 disabled:hover:translate-y-0 disabled:hover:shadow-none"
-        >
-          {loading ? (
-            <div className="w-5 h-5 border-2 border-text-muted border-t-accent rounded-full animate-spin" />
-          ) : (
-            <>
-              <svg className="w-[20px] h-[20px] shrink-0" viewBox="0 0 24 24">
-                <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
-                <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
-                <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z"/>
-                <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
-              </svg>
-              Continue with Google
-            </>
-          )}
-        </button>
+        <div className="w-full mt-10 flex flex-col gap-3">
+          <button
+            id="student-signin-btn"
+            onClick={() => handleGoogleSignIn('student')}
+            disabled={loading}
+            className="w-full h-14 bg-bg-card border border-bg-border rounded-[1rem] shadow-sm hover:shadow-md hover:-translate-y-0.5 flex items-center justify-center gap-3 text-[15px] font-semibold text-text-primary active:scale-[0.98] transition-all duration-300 disabled:opacity-50 disabled:hover:translate-y-0 disabled:hover:shadow-none"
+          >
+            {loading && loginMode === 'student' ? (
+              <div className="w-5 h-5 border-2 border-text-muted border-t-accent rounded-full animate-spin" />
+            ) : (
+              <>
+                <GoogleIcon />
+                Student Login
+              </>
+            )}
+          </button>
+
+          <button
+            id="admin-signin-btn"
+            onClick={() => handleGoogleSignIn('admin')}
+            disabled={loading}
+            className="w-full h-14 bg-accent text-white rounded-[1rem] shadow-glow-sm hover:shadow-glow hover:bg-accent-light flex items-center justify-center gap-3 text-[15px] font-semibold active:scale-[0.98] transition-all duration-300 disabled:opacity-50 disabled:hover:shadow-glow-sm"
+          >
+            {loading && loginMode === 'admin' ? (
+              <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+            ) : (
+              <>
+                <GoogleIcon />
+                Admin Login
+              </>
+            )}
+          </button>
+        </div>
         
         {/* Minimal clean note box */}
         <div className="mt-6 inline-flex px-4 py-1.5 bg-text-primary/[0.03] border border-text-primary/[0.06] rounded-full items-center justify-center gap-2">
@@ -181,7 +247,7 @@ export default function Login() {
             <path strokeLinecap="round" strokeLinejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
           </svg>
           <span className="text-[11px] font-semibold text-text-secondary">
-            Use your Christ University email ID
+            Students need a Christ email. Admin access needs approval.
           </span>
         </div>
 

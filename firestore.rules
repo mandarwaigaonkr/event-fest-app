@@ -23,6 +23,28 @@ service cloud.firestore {
         request.resource.data.uid == resource.data.uid &&
         request.resource.data.role == resource.data.role;
     }
+    function isSafeAdminRequestWrite(uid) {
+      return isOwner(uid) &&
+        request.resource.data.uid == uid &&
+        request.resource.data.role == 'pending_admin' &&
+        request.resource.data.adminStatus in ['draft', 'pending'] &&
+        request.resource.data.onboarded == (request.resource.data.adminStatus == 'pending') &&
+        request.resource.data.keys().hasOnly([
+          'uid',
+          'name',
+          'email',
+          'photoURL',
+          'role',
+          'adminStatus',
+          'designation',
+          'organization',
+          'adminRequestReason',
+          'onboarded',
+          'createdAt',
+          'requestedAdminAt',
+          'updatedAt'
+        ]);
+    }
     function isSafeRegistrationCreate(uid) {
       return isOwner(uid) &&
         request.resource.data.uid == uid &&
@@ -134,6 +156,9 @@ service cloud.firestore {
         request.resource.data.type in [
           'team_invite_accepted',
           'team_invite_rejected',
+          'admin_access_requested',
+          'admin_access_approved',
+          'admin_access_rejected',
           'event_update',
           'admin_notice'
         ];
@@ -149,8 +174,8 @@ service cloud.firestore {
 
     match /users/{uid} {
       allow read: if isSignedIn();
-      allow create: if isSafeUserCreate(uid);
-      allow update: if isAdmin() || isSafeUserUpdate(uid);
+      allow create: if isSafeUserCreate(uid) || isSafeAdminRequestWrite(uid);
+      allow update: if isAdmin() || isSafeUserUpdate(uid) || isSafeAdminRequestWrite(uid);
       allow delete: if isAdmin();
 
       match /notifications/{notificationId} {
