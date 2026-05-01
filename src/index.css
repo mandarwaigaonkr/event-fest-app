@@ -6,9 +6,9 @@
   /* LIGHT THEME */
   :root {
     --color-bg-base-solid: #FAFAFA;
-    --color-bg-base: rgba(250, 250, 250, 0.85);
-    --color-bg-card: rgba(255, 255, 255, 0.92);
-    --color-bg-elevated: rgba(244, 244, 245, 0.90);
+    --color-bg-base: rgba(250, 250, 250, 0.72);
+    --color-bg-card: rgba(255, 255, 255, 0.78);
+    --color-bg-elevated: rgba(244, 244, 245, 0.75);
     --color-bg-border: #E4E4E7;
     
     --color-accent: #7C3AED;
@@ -28,9 +28,9 @@
   /* DARK THEME — warm zinc, not cold navy */
   .dark {
     --color-bg-base-solid: #09090B;
-    --color-bg-base: rgba(9, 9, 11, 0.88);
-    --color-bg-card: rgba(24, 24, 27, 0.92);
-    --color-bg-elevated: rgba(39, 39, 42, 0.90);
+    --color-bg-base: rgba(9, 9, 11, 0.75);
+    --color-bg-card: rgba(24, 24, 27, 0.78);
+    --color-bg-elevated: rgba(39, 39, 42, 0.75);
     --color-bg-border: #3F3F46;
     
     --color-accent: #A78BFA;
@@ -225,15 +225,15 @@ textarea {
   height: 100%;
   object-fit: cover;
   object-position: center bottom;
-  opacity: 0.06;
-  filter: blur(40px) saturate(1.3);
-  transform: scale(1.1); /* prevent blur edge artifacts */
+  opacity: 0.18;
+  filter: blur(4px) saturate(1.2);
+  transform: scale(1.02); /* prevent blur edge artifacts */
   transition: opacity 0.5s ease, filter 0.5s ease;
 }
 
 .dark .app-bg__img {
-  opacity: 0.08;
-  filter: blur(35px) saturate(1.2);
+  opacity: 0.22;
+  filter: blur(4px) saturate(1.1);
 }
 
 /* Colour wash — tints the background to match the theme's base */
@@ -248,9 +248,9 @@ textarea {
   background:
     linear-gradient(
       180deg,
-      rgba(250, 250, 250, 0.70) 0%,
-      rgba(250, 250, 250, 0.40) 50%,
-      rgba(250, 250, 250, 0.60) 100%
+      rgba(250, 250, 250, 0.55) 0%,
+      rgba(250, 250, 250, 0.30) 50%,
+      rgba(250, 250, 250, 0.45) 100%
     );
 }
 
@@ -258,9 +258,9 @@ textarea {
   background:
     linear-gradient(
       180deg,
-      rgba(9, 9, 11, 0.75) 0%,
-      rgba(9, 9, 11, 0.45) 50%,
-      rgba(9, 9, 11, 0.65) 100%
+      rgba(9, 9, 11, 0.60) 0%,
+      rgba(9, 9, 11, 0.35) 50%,
+      rgba(9, 9, 11, 0.50) 100%
     );
 }
 

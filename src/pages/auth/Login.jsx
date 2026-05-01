@@ -317,52 +317,54 @@ export default function Login() {
         </div>
 
         {/* ---- ADAPTIVE LOGIN CARD ---- */}
-        <div className="login-card-single login-animate-in login-animate-in--cards">
-          {/* Icon */}
-          <div className={`login-card__icon ${loginMode === 'student' ? 'login-card__icon--student' : 'login-card__icon--admin'}`}>
-            <GoogleIcon />
-          </div>
+        <div className={`login-card-single login-animate-in login-animate-in--cards ${loginMode === 'student' ? 'login-card-single--student' : 'login-card-single--admin'}`}>
+          <div className="login-card__content" key={loginMode}>
+            {/* Icon */}
+            <div className={`login-card__icon ${loginMode === 'student' ? 'login-card__icon--student' : 'login-card__icon--admin'}`}>
+              <GoogleIcon />
+            </div>
 
-          <span className="login-card__title">
-            {loginMode === 'student' ? 'Student Login' : 'Admin Login'}
-          </span>
-          <span className="login-card__action">
-            {loginMode === 'student' ? 'Continue with Google' : 'Sign in with Google'}
-          </span>
-          <span className="login-card__role">
-            {loginMode === 'student' ? 'For students' : 'For faculty & administrators'}
-          </span>
-
-          {/* Support text */}
-          <div className="login-card__support">
-            {loginMode === 'student' ? (
-              <UserIcon className="login-card__support-icon" />
-            ) : (
-              <LockIcon className="login-card__support-icon" />
-            )}
-            <span className="login-card__support-text">
-              {loginMode === 'student'
-                ? 'Quick and secure access with your Christ University account'
-                : 'Secure access for event creators and managers'}
+            <span className="login-card__title">
+              {loginMode === 'student' ? 'Student Login' : 'Admin Login'}
             </span>
-          </div>
+            <span className="login-card__action">
+              {loginMode === 'student' ? 'Continue with Google' : 'Sign in with Google'}
+            </span>
+            <span className="login-card__role">
+              {loginMode === 'student' ? 'For students' : 'For faculty & administrators'}
+            </span>
 
-          {/* CTA */}
-          <button
-            id={loginMode === 'student' ? 'student-signin-btn' : 'admin-signin-btn'}
-            onClick={() => handleGoogleSignIn(loginMode)}
-            disabled={loading}
-            className={`login-btn ${loginMode === 'student' ? 'login-btn--student' : 'login-btn--admin'}`}
-          >
-            {loading ? (
-              <div className="login-spinner" />
-            ) : (
-              <>
-                {loginMode === 'student' ? 'Continue with Google' : 'Sign in with Google'}
-                <span className="login-btn__arrow">→</span>
-              </>
-            )}
-          </button>
+            {/* Support text */}
+            <div className="login-card__support">
+              {loginMode === 'student' ? (
+                <UserIcon className="login-card__support-icon" />
+              ) : (
+                <LockIcon className="login-card__support-icon" />
+              )}
+              <span className="login-card__support-text">
+                {loginMode === 'student'
+                  ? 'Quick and secure access with your Christ University account'
+                  : 'Secure access for event creators and managers'}
+              </span>
+            </div>
+
+            {/* CTA */}
+            <button
+              id={loginMode === 'student' ? 'student-signin-btn' : 'admin-signin-btn'}
+              onClick={() => handleGoogleSignIn(loginMode)}
+              disabled={loading}
+              className={`login-btn ${loginMode === 'student' ? 'login-btn--student' : 'login-btn--admin'}`}
+            >
+              {loading ? (
+                <div className="login-spinner" />
+              ) : (
+                <>
+                  {loginMode === 'student' ? 'Continue with Google' : 'Sign in with Google'}
+                  <span className="login-btn__arrow">→</span>
+                </>
+              )}
+            </button>
+          </div>
         </div>
 
         {/* ---- ERROR MESSAGE ---- */}
