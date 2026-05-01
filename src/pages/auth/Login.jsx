@@ -1,4 +1,7 @@
 // src/pages/auth/Login.jsx
+// Premium Christ University Event Manager login page
+// Features: dual-theme backgrounds, glassmorphism cards, layered blur/gradient system
+
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
@@ -10,13 +13,21 @@ import {
 import { doc, getDoc, setDoc, serverTimestamp } from 'firebase/firestore'
 import { auth, db, googleProvider } from '../../firebase'
 import { useAuth } from '../../hooks/useAuth'
+import { useTheme } from '../../context/ThemeContext'
 import { extractRegNumber, extractCleanName } from '../../utils/formatters'
+
+// Assets
 import christLogo from '../../assets/Christ complete logo.png'
+import bgLight from '../../assets/background image.png'
+import bgDark from '../../assets/dark theme background.png'
+
+// Scoped styles
+import './Login.css'
 
 const ALLOWED_DOMAIN = 'christuniversity.in'
 const LOGIN_MODE_KEY = 'event-manager-login-mode'
 
-
+/* ---- Auth helpers (unchanged logic) ---- */
 
 function authErrorMessage(code) {
   switch (code) {
@@ -102,9 +113,11 @@ async function ensureAdminProfile(firebaseUser, navigate) {
   navigate('/admin-onboarding', { replace: true })
 }
 
+/* ---- Inline SVG Icons ---- */
+
 function GoogleIcon() {
   return (
-    <svg className="w-[20px] h-[20px] shrink-0" viewBox="0 0 24 24">
+    <svg className="w-[18px] h-[18px] shrink-0" viewBox="0 0 24 24">
       <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
       <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
       <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z"/>
@@ -113,13 +126,54 @@ function GoogleIcon() {
   )
 }
 
+function ShieldIcon({ className }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round">
+      <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+    </svg>
+  )
+}
+
+function LockIcon({ className }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round">
+      <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+      <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+    </svg>
+  )
+}
+
+function UserIcon({ className }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round">
+      <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+      <circle cx="12" cy="7" r="4"/>
+    </svg>
+  )
+}
+
+function ShieldCheckIcon({ className }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round">
+      <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+      <path d="M9 12l2 2 4-4"/>
+    </svg>
+  )
+}
+
+/* ================================================================
+   LOGIN COMPONENT
+   ================================================================ */
+
 export default function Login() {
   const [loading, setLoading] = useState(false)
   const [loginMode, setLoginMode] = useState('student')
   const [error, setError] = useState('')
   const navigate = useNavigate()
   const { user, profile, loading: authLoading, isAdmin, isOnboarded } = useAuth()
+  const { isDark } = useTheme()
 
+  // Auto-redirect if already authenticated
   useEffect(() => {
     if (authLoading || !user || !profile) return
     if (profile.role === 'pending_admin' || profile.adminStatus === 'pending' || profile.adminStatus === 'rejected') {
@@ -129,6 +183,7 @@ export default function Login() {
     else navigate('/dashboard', { replace: true })
   }, [authLoading, user, profile, isAdmin, isOnboarded, navigate])
 
+  // Handle redirect result (mobile Safari fallback)
   useEffect(() => {
     let mounted = true
 
@@ -172,6 +227,7 @@ export default function Login() {
     }
   }
 
+  // Full-screen spinner while checking auth state
   if (authLoading || (user && profile)) {
     return (
       <div className="min-h-screen bg-bg-base flex items-center justify-center px-6">
@@ -181,83 +237,153 @@ export default function Login() {
   }
 
   return (
-    <div className="min-h-screen relative flex flex-col items-center justify-center px-6 py-safe bg-bg-base overflow-hidden">
-      
-      {/* Live Subtle Golden Background */}
-      <div className="absolute inset-0 z-0 pointer-events-none">
-        <div className="absolute bottom-0 inset-x-0 h-[60vh] bg-gradient-to-t from-[#fde68a]/10 dark:from-[#fde68a]/5 to-transparent" />
-        <div className="absolute -bottom-32 -left-32 w-[30rem] h-[30rem] bg-[#fcd34d]/10 dark:bg-[#fcd34d]/5 rounded-full blur-[100px] animate-[pulse_7s_ease-in-out_infinite]" />
-        <div className="absolute top-1/2 -right-32 w-[25rem] h-[25rem] bg-[#fbbf24]/10 dark:bg-[#fbbf24]/5 rounded-full blur-[100px] animate-[pulse_10s_ease-in-out_infinite_alternate]" />
-      </div>
-
-      <div className="w-full max-w-sm flex flex-col items-center animate-fade-up relative z-10">
-        
-        {/* Logo */}
-        <img 
-          src={christLogo} 
-          alt="Christ Logo" 
-          className="w-[400px] h-[104px] object-contain mb-8 drop-shadow-sm" 
+    <div className="login-page">
+      {/* ===== BACKGROUND SYSTEM ===== */}
+      <div className="login-bg login-bg-animate">
+        {/* Background image — swaps based on theme */}
+        <img
+          src={isDark ? bgDark : bgLight}
+          alt=""
+          className="login-bg__img login-bg__drift"
+          draggable={false}
+          aria-hidden="true"
         />
 
-        {/* Clean minimal flat layout */}
-        <h1 className="text-3xl font-bold text-text-primary tracking-tight">
+        {/* Gradient overlay */}
+        <div className={`login-bg__overlay ${isDark ? 'login-bg__overlay--dark' : 'login-bg__overlay--light'}`} />
+
+        {/* Global soft frost */}
+        <div className="login-bg__frost" />
+
+        {/* Heavy blur at top */}
+        <div className="login-bg__blur-top" />
+
+        {/* Dark theme glow at base */}
+        {isDark && <div className="login-bg__glow" />}
+      </div>
+
+      {/* ===== MAIN CONTENT ===== */}
+      <div className="login-content">
+
+        {/* ---- LOGO ---- */}
+        <img
+          src={christLogo}
+          alt="Christ University"
+          className="login-logo login-animate-in login-animate-in--logo"
+          draggable={false}
+        />
+
+        {/* ---- TITLE ---- */}
+        <h1 className="login-title login-animate-in login-animate-in--title">
           Event Manager
         </h1>
-        <p className="text-sm font-medium text-text-secondary mt-1 text-center">
+
+        <p className="login-subtitle login-animate-in login-animate-in--subtitle">
           Your campus event companion
         </p>
 
-        <div className="w-full mt-10 flex flex-col gap-3">
-          <button
-            id="student-signin-btn"
-            onClick={() => handleGoogleSignIn('student')}
-            disabled={loading}
-            className="w-full h-14 bg-bg-card border border-bg-border rounded-[1rem] shadow-sm hover:shadow-md hover:-translate-y-0.5 flex items-center justify-center gap-3 text-[15px] font-semibold text-text-primary active:scale-[0.98] transition-all duration-300 disabled:opacity-50 disabled:hover:translate-y-0 disabled:hover:shadow-none"
-          >
-            {loading && loginMode === 'student' ? (
-              <div className="w-5 h-5 border-2 border-text-muted border-t-accent rounded-full animate-spin" />
-            ) : (
-              <>
-                <GoogleIcon />
-                Student Login
-              </>
-            )}
-          </button>
+        {/* ---- Diamond separator ---- */}
+        <div className="login-diamond login-animate-in login-animate-in--diamond">
+          <span className="login-diamond__line" />
+          <span className="login-diamond__icon" />
+          <span className="login-diamond__line" />
+        </div>
 
+        <p className="login-description login-animate-in login-animate-in--desc">
+          Choose how you want to sign in to access and manage events.
+        </p>
+
+        {/* ---- SEGMENTED TOGGLE ---- */}
+        <div className="login-toggle login-animate-in login-animate-in--cards">
+          <div className="login-toggle__track">
+            <div
+              className={`login-toggle__slider ${loginMode === 'admin' ? 'login-toggle__slider--right' : ''}`}
+            />
+            <button
+              type="button"
+              className={`login-toggle__btn ${loginMode === 'student' ? 'login-toggle__btn--active' : ''}`}
+              onClick={() => { setLoginMode('student'); setError('') }}
+            >
+              <span>Student</span>
+            </button>
+            <button
+              type="button"
+              className={`login-toggle__btn ${loginMode === 'admin' ? 'login-toggle__btn--active' : ''}`}
+              onClick={() => { setLoginMode('admin'); setError('') }}
+            >
+              <span>Admin</span>
+            </button>
+          </div>
+        </div>
+
+        {/* ---- ADAPTIVE LOGIN CARD ---- */}
+        <div className="login-card-single login-animate-in login-animate-in--cards">
+          {/* Icon */}
+          <div className={`login-card__icon ${loginMode === 'student' ? 'login-card__icon--student' : 'login-card__icon--admin'}`}>
+            <GoogleIcon />
+          </div>
+
+          <span className="login-card__title">
+            {loginMode === 'student' ? 'Student Login' : 'Admin Login'}
+          </span>
+          <span className="login-card__action">
+            {loginMode === 'student' ? 'Continue with Google' : 'Sign in with Google'}
+          </span>
+          <span className="login-card__role">
+            {loginMode === 'student' ? 'For students' : 'For faculty & administrators'}
+          </span>
+
+          {/* Support text */}
+          <div className="login-card__support">
+            {loginMode === 'student' ? (
+              <UserIcon className="login-card__support-icon" />
+            ) : (
+              <LockIcon className="login-card__support-icon" />
+            )}
+            <span className="login-card__support-text">
+              {loginMode === 'student'
+                ? 'Quick and secure access with your Christ University account'
+                : 'Secure access for event creators and managers'}
+            </span>
+          </div>
+
+          {/* CTA */}
           <button
-            id="admin-signin-btn"
-            onClick={() => handleGoogleSignIn('admin')}
+            id={loginMode === 'student' ? 'student-signin-btn' : 'admin-signin-btn'}
+            onClick={() => handleGoogleSignIn(loginMode)}
             disabled={loading}
-            className="w-full h-14 bg-accent text-white rounded-[1rem] shadow-glow-sm hover:shadow-glow hover:bg-accent-light flex items-center justify-center gap-3 text-[15px] font-semibold active:scale-[0.98] transition-all duration-300 disabled:opacity-50 disabled:hover:shadow-glow-sm"
+            className={`login-btn ${loginMode === 'student' ? 'login-btn--student' : 'login-btn--admin'}`}
           >
-            {loading && loginMode === 'admin' ? (
-              <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+            {loading ? (
+              <div className="login-spinner" />
             ) : (
               <>
-                <GoogleIcon />
-                Admin Login
+                {loginMode === 'student' ? 'Continue with Google' : 'Sign in with Google'}
+                <span className="login-btn__arrow">→</span>
               </>
             )}
           </button>
         </div>
-        
-        {/* Minimal clean note box */}
-        <div className="mt-6 inline-flex px-4 py-1.5 bg-text-primary/[0.03] border border-text-primary/[0.06] rounded-full items-center justify-center gap-2">
-          <svg className="w-3.5 h-3.5 text-text-muted" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-          </svg>
-          <span className="text-[11px] font-semibold text-text-secondary">
-            Students need a Christ email. Admin access needs approval.
+
+        {/* ---- ERROR MESSAGE ---- */}
+        {error && (
+          <p className="login-error login-animate-in">{error}</p>
+        )}
+
+        {/* ---- SECURITY BADGE ---- */}
+        <div className="login-security login-animate-in login-animate-in--security">
+          <ShieldCheckIcon className="login-security__icon" />
+          <span className="login-security__text">
+            Secure platform. Your data is protected.
           </span>
         </div>
 
-        {error && (
-          <p className="text-xs text-danger text-center mt-4">{error}</p>
-        )}
-
-        <p className="text-[12px] font-medium text-text-muted mt-12 text-center opacity-60">
-          By continuing, you agree to our Terms of Service
+        {/* ---- FOOTER ---- */}
+        <p className="login-footer login-animate-in login-animate-in--footer">
+          By continuing, you agree to our{' '}
+          <span className="login-footer__link">Terms of Service</span>
         </p>
+
       </div>
     </div>
   )

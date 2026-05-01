@@ -5,9 +5,10 @@
 @layer base {
   /* LIGHT THEME */
   :root {
-    --color-bg-base: #FAFAFA;
-    --color-bg-card: #FFFFFF;
-    --color-bg-elevated: #F4F4F5;
+    --color-bg-base-solid: #FAFAFA;
+    --color-bg-base: rgba(250, 250, 250, 0.85);
+    --color-bg-card: rgba(255, 255, 255, 0.92);
+    --color-bg-elevated: rgba(244, 244, 245, 0.90);
     --color-bg-border: #E4E4E7;
     
     --color-accent: #7C3AED;
@@ -26,9 +27,10 @@
 
   /* DARK THEME — warm zinc, not cold navy */
   .dark {
-    --color-bg-base: #09090B;
-    --color-bg-card: #18181B;
-    --color-bg-elevated: #27272A;
+    --color-bg-base-solid: #09090B;
+    --color-bg-base: rgba(9, 9, 11, 0.88);
+    --color-bg-card: rgba(24, 24, 27, 0.92);
+    --color-bg-elevated: rgba(39, 39, 42, 0.90);
     --color-bg-border: #3F3F46;
     
     --color-accent: #A78BFA;
@@ -57,7 +59,7 @@ body {
   font-size: 16px;
   line-height: 1.5;
   color: var(--color-text-primary);
-  background-color: var(--color-bg-base);
+  background-color: var(--color-bg-base-solid);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   
@@ -67,7 +69,7 @@ body {
 }
 
 html {
-  background-color: var(--color-bg-base);
+  background-color: var(--color-bg-base-solid);
   overscroll-behavior-y: none;
   scroll-behavior: smooth;
 }
@@ -206,3 +208,64 @@ textarea {
 
 .scrollbar-hide::-webkit-scrollbar { display: none; }
 .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
+
+/* ================================================
+   GLOBAL APP BACKGROUND — subtle campus texture
+   ================================================ */
+.app-bg {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.app-bg__img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center bottom;
+  opacity: 0.06;
+  filter: blur(40px) saturate(1.3);
+  transform: scale(1.1); /* prevent blur edge artifacts */
+  transition: opacity 0.5s ease, filter 0.5s ease;
+}
+
+.dark .app-bg__img {
+  opacity: 0.08;
+  filter: blur(35px) saturate(1.2);
+}
+
+/* Colour wash — tints the background to match the theme's base */
+.app-bg__wash {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  transition: background 0.5s ease;
+}
+
+.app-bg__wash--light {
+  background:
+    linear-gradient(
+      180deg,
+      rgba(250, 250, 250, 0.70) 0%,
+      rgba(250, 250, 250, 0.40) 50%,
+      rgba(250, 250, 250, 0.60) 100%
+    );
+}
+
+.app-bg__wash--dark {
+  background:
+    linear-gradient(
+      180deg,
+      rgba(9, 9, 11, 0.75) 0%,
+      rgba(9, 9, 11, 0.45) 50%,
+      rgba(9, 9, 11, 0.65) 100%
+    );
+}
+
+/* Make page-level bg-base semi-transparent so the campus texture peeks through */
+#root {
+  position: relative;
+  z-index: 1;
+}

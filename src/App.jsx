@@ -7,6 +7,7 @@ import { Toaster } from 'react-hot-toast'
 import AuthProvider from './context/AuthContext'
 import EventsProvider from './context/EventsContext'
 import { ThemeProvider } from './context/ThemeContext'
+import AppBackground from './components/AppBackground'
 
 // Route guards (small — kept eager)
 import ProtectedRoute from './components/ProtectedRoute'
@@ -43,6 +44,7 @@ export default function App() {
   return (
     <ThemeProvider>
     <BrowserRouter>
+      <AppBackground />
       <AuthProvider>
         {/* Global toast notifications */}
         <Toaster
